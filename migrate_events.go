@@ -14,23 +14,19 @@ import (
 
 func (m *Migrator) RunEventMigration() error {
 	eventRepo := postgres.NewEventRepo(m, ncache.NewNoopCache())
-	pageable := datastore.Pageable{
-		PerPage:    1000,
-		Direction:  "next",
-		NextCursor: "",
-	}
 
 	for _, p := range m.projects {
-		events, err := m.loadEvents(eventRepo, &p, pageable)
+		events, err := m.loadEvents(eventRepo, p, defaultPageable)
 		if err != nil {
 			return err
 		}
 
-		err = m.SaveEvents(context.Background(), events)
-		if err != nil {
-			return fmt.Errorf("failed to save events: %v", err)
+		if len(events) > 0 {
+			err = m.SaveEvents(context.Background(), events)
+			if err != nil {
+				return fmt.Errorf("failed to save events: %v", err)
+			}
 		}
-		return nil
 	}
 
 	return nil

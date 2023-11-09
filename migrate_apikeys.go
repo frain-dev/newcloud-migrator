@@ -15,35 +15,33 @@ import (
 
 func (m *Migrator) RunAPIKeyMigration() error {
 	apiKeyRepo := postgres.NewAPIKeyRepo(m, ncache.NewNoopCache())
-	pageable := &datastore.Pageable{
-		PerPage:    1000,
-		Direction:  "next",
-		NextCursor: "",
-	}
 
 	// migrate project api keys
 	for _, p := range m.projects {
-		keys, err := m.loadAPIKeys(apiKeyRepo, p.UID, "", pageable)
+		keys, err := m.loadAPIKeys(apiKeyRepo, p.UID, "", defaultPageable)
 		if err != nil {
 			return err
 		}
 
-		err = m.SaveAPIKeys(context.Background(), keys)
-		if err != nil {
-			return fmt.Errorf("failed to save project keys: %v", err)
+		if len(keys) > 0 {
+			err = m.SaveAPIKeys(context.Background(), keys)
+			if err != nil {
+				return fmt.Errorf("failed to save project keys: %v", err)
+			}
 		}
-		return nil
 	}
 
 	// migrate user api keys
-	userKeys, err := m.loadAPIKeys(apiKeyRepo, "", m.user.UID, pageable)
+	userKeys, err := m.loadAPIKeys(apiKeyRepo, "", m.user.UID, defaultPageable)
 	if err != nil {
 		return err
 	}
 
-	err = m.SaveAPIKeys(context.Background(), userKeys)
-	if err != nil {
-		return fmt.Errorf("failed to save user keys: %v", err)
+	if len(userKeys) > 0 {
+		err = m.SaveAPIKeys(context.Background(), userKeys)
+		if err != nil {
+			return fmt.Errorf("failed to save user keys: %v", err)
+		}
 	}
 
 	return nil

@@ -3,22 +3,27 @@ package main
 import (
 	"context"
 	"fmt"
+	ncache "github.com/frain-dev/convoy/cache/noop"
+	"github.com/frain-dev/convoy/database/postgres"
 
 	"github.com/frain-dev/convoy/datastore"
 )
 
 func (m *Migrator) RunEndpointMigration() error {
+	endpointRepo := postgres.NewEndpointRepo(m, ncache.NewNoopCache())
+
 	for _, p := range m.projects {
-		endpoints, err := m.loadProjectEndpoints(p.OrganisationID, p.UID, pagedResponse{})
+		endpoints, err := m.loadProjectEndpoints(endpointRepo, p.UID, defaultPageable)
 		if err != nil {
 			return err
 		}
 
-		err = m.SaveEndpoints(context.Background(), endpoints)
-		if err != nil {
-			return fmt.Errorf("failed to save endpoints: %v", err)
+		if len(endpoints) > 0 {
+			err = m.SaveEndpoints(context.Background(), endpoints)
+			if err != nil {
+				return fmt.Errorf("failed to save endpoints: %v", err)
+			}
 		}
-		return nil
 	}
 
 	return nil

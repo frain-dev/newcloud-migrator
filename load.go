@@ -13,8 +13,12 @@ import (
 )
 
 type pagedResponse struct {
-	Content    interface{}               `json:"content,omitempty"`
-	Pagination *datastore.PaginationData `json:"pagination,omitempty"`
+	Data data `json:"data"`
+}
+
+type data struct {
+	Content    interface{}              `json:"content,omitempty"`
+	Pagination datastore.PaginationData `json:"pagination,omitempty"`
 }
 
 func (m *Migrator) loadUser() (*datastore.User, error) {
@@ -31,8 +35,13 @@ func (m *Migrator) loadUser() (*datastore.User, error) {
 		return nil, fmt.Errorf("failed to get user: %v", err)
 	}
 
+	type data struct {
+		Data interface{} `json:"data,omitempty"`
+	}
+
 	user := &datastore.User{}
-	err = readBody(resp.Body, user)
+
+	err = readBody(resp.Body, &data{user})
 	if err != nil {
 		return nil, fmt.Errorf("failed to read user body: %v", err)
 	}
@@ -41,7 +50,7 @@ func (m *Migrator) loadUser() (*datastore.User, error) {
 }
 
 func (m *Migrator) loadOrganisations(pageable pagedResponse) ([]datastore.Organisation, error) {
-	url := fmt.Sprintf("%s/ui/organisations?perPage=%d&direction=next&next_page_cursor=%s", m.OldBaseURL, pageable.Pagination.PerPage, pageable.Pagination.NextPageCursor)
+	url := fmt.Sprintf("%s/ui/organisations?perPage=%d&direction=next&next_page_cursor=%s", m.OldBaseURL, pageable.Data.Pagination.PerPage, pageable.Data.Pagination.NextPageCursor)
 	r, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -55,17 +64,27 @@ func (m *Migrator) loadOrganisations(pageable pagedResponse) ([]datastore.Organi
 	}
 
 	orgs := []datastore.Organisation{}
-	pg := pagedResponse{Content: &orgs}
+	pg := pagedResponse{
+		Data: data{
+			Content: &orgs,
+		},
+	}
 
 	err = readBody(resp.Body, &pg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read orgs body: %v", err)
 	}
 
-	if pg.Pagination.HasNextPage {
+	fmt.Println("ord", orgs)
+
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, fmt.Errorf("request failed: %d", resp.StatusCode)
+	}
+
+	if pg.Data.Pagination.HasNextPage {
 		moreOrgs, err := m.loadOrganisations(pg)
 		if err != nil {
-			log.WithError(err).Errorf("failed to load next org page, next cursor is %s", pg.Pagination.NextPageCursor)
+			log.WithError(err).Errorf("failed to load next org page, next cursor is %s", pg.Data.Pagination.NextPageCursor)
 		}
 
 		orgs = append(orgs, moreOrgs...)
@@ -76,59 +95,34 @@ func (m *Migrator) loadOrganisations(pageable pagedResponse) ([]datastore.Organi
 
 func readBody(r io.ReadCloser, i interface{}) error {
 	defer r.Close()
-	return json.NewDecoder(r).Decode(i)
+
+	b, err := io.ReadAll(r)
+	r.Close()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("body", string(b))
+	return json.Unmarshal(b, i)
 }
 
-func (m *Migrator) loadOrgProjects(orgID string) ([]datastore.Project, error) {
-	url := fmt.Sprintf("%s/ui/organisations/%s/projects", m.OldBaseURL, orgID)
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+func (m *Migrator) loadOrgProjects(projectRepo datastore.ProjectRepository, orgID string) ([]*datastore.Project, error) {
+	return projectRepo.LoadProjects(context.Background(), &datastore.ProjectFilter{OrgID: orgID})
+}
+
+func (m *Migrator) loadProjectEndpoints(endpointRepo datastore.EndpointRepository, projectID string, pageable datastore.Pageable) ([]datastore.Endpoint, error) {
+	endpoints, paginationData, err := endpointRepo.LoadEndpointsPaged(context.Background(), projectID, &datastore.Filter{}, pageable)
 	if err != nil {
 		return nil, err
 	}
 
-	m.addHeader(r)
+	fmt.Println("vvv", endpoints)
 
-	resp, err := client.Do(r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get projects: %v", err)
-	}
-
-	projects := []datastore.Project{}
-
-	err = readBody(resp.Body, &projects)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read projects body: %v", err)
-	}
-
-	return projects, nil
-}
-
-func (m *Migrator) loadProjectEndpoints(orgID, projectID string, pageable pagedResponse) ([]datastore.Endpoint, error) {
-	url := fmt.Sprintf("%s/ui/organisations/%s/projects/%s/endpoints?perPage=%d&direction=next&next_page_cursor=%s", m.OldBaseURL, orgID, projectID, pageable.Pagination.PerPage, pageable.Pagination.NextPageCursor)
-	r, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	m.addHeader(r)
-
-	resp, err := client.Do(r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get endpoints: %v", err)
-	}
-
-	endpoints := []datastore.Endpoint{}
-	pg := pagedResponse{Content: &endpoints}
-
-	err = readBody(resp.Body, &pg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read endpoints body: %v", err)
-	}
-
-	if pg.Pagination.HasNextPage {
-		moreEndpoints, err := m.loadProjectEndpoints(orgID, projectID, pg)
+	if paginationData.HasNextPage {
+		pageable.NextCursor = endpoints[len(endpoints)-1].UID
+		moreEndpoints, err := m.loadProjectEndpoints(endpointRepo, projectID, pageable)
 		if err != nil {
-			log.WithError(err).Errorf("failed to load next endpoints page, next cursor is %s", pg.Pagination.NextPageCursor)
+			log.WithError(err).Errorf("failed to load next members page, next cursor is %s", paginationData.NextPageCursor)
 		}
 
 		endpoints = append(endpoints, moreEndpoints...)
@@ -138,33 +132,22 @@ func (m *Migrator) loadProjectEndpoints(orgID, projectID string, pageable pagedR
 }
 
 func (m *Migrator) addHeader(r *http.Request) {
-	m.addHeader(r)
+	r.Header.Add("Authorization", "Bearer "+m.PAT)
 }
 
-func (m *Migrator) loadProjectSources(orgID, projectID string, pageable pagedResponse) ([]datastore.Source, error) {
-	url := fmt.Sprintf("%s/ui/organisations/%s/projects/%s/sources?perPage=%d&direction=next&next_page_cursor=%s", m.OldBaseURL, orgID, projectID, pageable.Pagination.PerPage, pageable.Pagination.NextPageCursor)
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+func (m *Migrator) loadProjectSources(sourceRepo datastore.SourceRepository, projectID string, pageable datastore.Pageable) ([]datastore.Source, error) {
+	sources, paginationData, err := sourceRepo.LoadSourcesPaged(context.Background(), projectID, &datastore.SourceFilter{}, pageable)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := client.Do(r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get sources: %v", err)
-	}
+	fmt.Println("vvv", sources)
 
-	sources := []datastore.Source{}
-	pg := pagedResponse{Content: &sources}
-
-	err = readBody(resp.Body, &pg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read sources body: %v", err)
-	}
-
-	if pg.Pagination.HasNextPage {
-		moreSources, err := m.loadProjectSources(orgID, projectID, pg)
+	if paginationData.HasNextPage {
+		pageable.NextCursor = sources[len(sources)-1].UID
+		moreSources, err := m.loadProjectSources(sourceRepo, projectID, pageable)
 		if err != nil {
-			log.WithError(err).Errorf("failed to load next source page, next cursor is %s", pg.Pagination.NextPageCursor)
+			log.WithError(err).Errorf("failed to load next members page, next cursor is %s", paginationData.NextPageCursor)
 		}
 
 		sources = append(sources, moreSources...)
@@ -173,32 +156,19 @@ func (m *Migrator) loadProjectSources(orgID, projectID string, pageable pagedRes
 	return sources, nil
 }
 
-func (m *Migrator) loadProjectSubscriptions(orgID, projectID string, pageable pagedResponse) ([]datastore.Subscription, error) {
-	url := fmt.Sprintf("%s/ui/organisations/%s/projects/%s/subscriptions?perPage=%d&direction=next&next_page_cursor=%s", m.OldBaseURL, orgID, projectID, pageable.Pagination.PerPage, pageable.Pagination.NextPageCursor)
-	r, err := http.NewRequest(http.MethodGet, url, nil)
+func (m *Migrator) loadProjectSubscriptions(subRepo datastore.SubscriptionRepository, projectID string, pageable datastore.Pageable) ([]datastore.Subscription, error) {
+	subscriptions, paginationData, err := subRepo.LoadSubscriptionsPaged(context.Background(), projectID, &datastore.FilterBy{}, pageable)
 	if err != nil {
 		return nil, err
 	}
 
-	m.addHeader(r)
+	fmt.Println("vvv", subscriptions)
 
-	resp, err := client.Do(r)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get subscriptions: %v", err)
-	}
-
-	subscriptions := []datastore.Subscription{}
-	pg := pagedResponse{Content: &subscriptions}
-
-	err = readBody(resp.Body, &pg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read subscriptions body: %v", err)
-	}
-
-	if pg.Pagination.HasNextPage {
-		moreSubscriptions, err := m.loadProjectSubscriptions(orgID, projectID, pg)
+	if paginationData.HasNextPage {
+		pageable.NextCursor = subscriptions[len(subscriptions)-1].UID
+		moreSubscriptions, err := m.loadProjectSubscriptions(subRepo, projectID, pageable)
 		if err != nil {
-			log.WithError(err).Errorf("failed to load next subscriptions page, next cursor is %s", pg.Pagination.NextPageCursor)
+			log.WithError(err).Errorf("failed to load next members page, next cursor is %s", paginationData.NextPageCursor)
 		}
 
 		subscriptions = append(subscriptions, moreSubscriptions...)
@@ -207,7 +177,7 @@ func (m *Migrator) loadProjectSubscriptions(orgID, projectID string, pageable pa
 	return subscriptions, nil
 }
 
-func (m *Migrator) loadAPIKeys(apiKeyRepo datastore.APIKeyRepository, projectID, userID string, pageable *datastore.Pageable) ([]datastore.APIKey, error) {
+func (m *Migrator) loadAPIKeys(apiKeyRepo datastore.APIKeyRepository, projectID, userID string, pageable datastore.Pageable) ([]datastore.APIKey, error) {
 	f := &datastore.ApiKeyFilter{
 		ProjectID: projectID,
 	}
@@ -218,7 +188,7 @@ func (m *Migrator) loadAPIKeys(apiKeyRepo datastore.APIKeyRepository, projectID,
 		}
 	}
 
-	keys, paginationData, err := apiKeyRepo.LoadAPIKeysPaged(context.Background(), f, pageable)
+	keys, paginationData, err := apiKeyRepo.LoadAPIKeysPaged(context.Background(), f, &pageable)
 	if err != nil {
 		return nil, err
 	}
@@ -241,6 +211,8 @@ func (m *Migrator) loadOrgMembers(orgMemberRepo datastore.OrganisationMemberRepo
 	if err != nil {
 		return nil, err
 	}
+
+	fmt.Println("vvv", members)
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = members[len(members)-1].UID

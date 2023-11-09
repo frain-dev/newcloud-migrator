@@ -10,7 +10,11 @@ import (
 )
 
 func (m *Migrator) RunOrgMigration() error {
-	orgs, err := m.loadOrganisations(pagedResponse{})
+	orgs, err := m.loadOrganisations(pagedResponse{
+		Data: data{
+			Pagination: datastore.PaginationData{PerPage: 1000},
+		},
+	})
 	if err != nil {
 		return err
 	}
@@ -23,14 +27,16 @@ func (m *Migrator) RunOrgMigration() error {
 		}
 	}
 
+	m.userOrgs = userOrgs
+	if len(userOrgs) == 0 {
+		return fmt.Errorf("user does not own any orgs")
+	}
+
 	orgMemberRepo := postgres.NewOrgMemberRepo(m, ncache.NewNoopCache())
 	userIDs := map[string]struct{}{}
 	members := []*datastore.OrganisationMember{}
 	for _, org := range userOrgs {
-		mm, err := m.loadOrgMembers(orgMemberRepo, org.UID, datastore.Pageable{
-			PerPage:   1000,
-			Direction: "next",
-		})
+		mm, err := m.loadOrgMembers(orgMemberRepo, org.UID, defaultPageable)
 		if err != nil {
 			return fmt.Errorf("failed to load org %s members: %v", org.UID, err)
 		}
@@ -39,6 +45,7 @@ func (m *Migrator) RunOrgMigration() error {
 			userIDs[mr.UserID] = struct{}{}
 		}
 
+		fmt.Println("mm", mm)
 		members = append(members, mm...)
 	}
 

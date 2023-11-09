@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	ncache "github.com/frain-dev/convoy/cache/noop"
+	"github.com/frain-dev/convoy/database/postgres"
 	"time"
 
 	"github.com/frain-dev/convoy/datastore"
@@ -13,20 +15,24 @@ import (
 )
 
 func (m *Migrator) RunProjectMigration() error {
+	projectRepo := postgres.NewProjectRepo(m, ncache.NewNoopCache())
+	fmt.Println("ddd", m.userOrgs)
 	for _, org := range m.userOrgs {
-		projects, err := m.loadOrgProjects(org.UID)
+		projects, err := m.loadOrgProjects(projectRepo, org.UID)
 		if err != nil {
 			return err
 		}
 
-		err = m.SaveProjects(context.Background(), projects)
-		if err != nil {
-			return fmt.Errorf("failed to save projects: %v", err)
+		fmt.Println("fff", projects)
+
+		if len(projects) > 0 {
+			err = m.SaveProjects(context.Background(), projects)
+			if err != nil {
+				return fmt.Errorf("failed to save projects: %v", err)
+			}
+
+			m.projects = append(m.projects, projects...)
 		}
-
-		m.projects = append(m.projects, projects...)
-
-		return nil
 	}
 
 	return nil
@@ -45,7 +51,12 @@ const (
 		retention_policy_enabled, ratelimit_count,
 		ratelimit_duration, strategy_type,
 		strategy_duration, strategy_retry_count,
-		signature_header, signature_versions
+		signature_header, signature_versions,
+	    created_at, updated_at,
+        disable_endpoint, meta_events_enabled,
+        meta_events_type,meta_events_event_type,
+        meta_events_url,meta_events_secret,
+        meta_events_pub_sub, search_policy
 	  )
 	  VALUES
 		(
@@ -54,23 +65,21 @@ const (
 		:retention_policy_enabled, :ratelimit_count,
 		:ratelimit_duration, :strategy_type,
 		:strategy_duration, :strategy_retry_count,
-		:signature_header, :signature_versions
-		:created_at, :updated_at
-        :disable_endpoint, :meta_events_enabled
-        :meta_events_type,:meta_events_event_type
-        :meta_events_url,:meta_events_secret
-        :meta_events_pub_sub
+		:signature_header, :signature_versions,
+		:created_at, :updated_at,
+        :disable_endpoint, :meta_events_enabled,
+        :meta_events_type,:meta_events_event_type,
+        :meta_events_url,:meta_events_secret,
+        :meta_events_pub_sub, :search_policy
 		)
 	`
 )
 
-func (m *Migrator) SaveProjects(ctx context.Context, projects []datastore.Project) error {
+func (m *Migrator) SaveProjects(ctx context.Context, projects []*datastore.Project) error {
 	prValues := make([]map[string]interface{}, 0, len(projects))
 	cfgs := make([]map[string]interface{}, 0, len(projects))
 
 	for _, project := range projects {
-		project.ProjectConfigID = ulid.Make().String()
-
 		prValues = append(prValues, map[string]interface{}{
 			"id":                       project.UID,
 			"name":                     project.Name,
@@ -102,8 +111,8 @@ func (m *Migrator) SaveProjects(ctx context.Context, projects []datastore.Projec
 			"strategy_retry_count":              sc.RetryCount,
 			"signature_header":                  sgc.Header,
 			"signature_versions":                sgc.Versions,
-			"created_at":                        time.Now(),
-			"updated_at":                        time.Now(),
+			"created_at":                        time.Now().Format(time.RFC3339),
+			"updated_at":                        time.Now().Format(time.RFC3339),
 			"disable_endpoint":                  project.Config.DisableEndpoint,
 			"meta_events_enabled":               meta.IsEnabled,
 			"meta_events_type":                  meta.Type,
@@ -111,6 +120,7 @@ func (m *Migrator) SaveProjects(ctx context.Context, projects []datastore.Projec
 			"meta_events_url":                   meta.URL,
 			"meta_events_secret":                meta.Secret,
 			"meta_events_pub_sub":               meta.PubSub,
+			"search_policy":                     rc.SearchPolicy,
 		})
 	}
 
@@ -122,7 +132,7 @@ func (m *Migrator) SaveProjects(ctx context.Context, projects []datastore.Projec
 
 	_, err = tx.NamedExecContext(ctx, saveProjectConfigurations, cfgs)
 	if err != nil {
-		return err
+		return fmt.Errorf("save config error: %v", err)
 	}
 
 	_, err = tx.NamedExecContext(ctx, saveProjects, prValues)

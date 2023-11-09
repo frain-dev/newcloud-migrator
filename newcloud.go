@@ -29,7 +29,7 @@ func AddMigrateCommand() *cobra.Command {
 		},
 	}
 
-	cmd.PersistentFlags().StringVar(&oldBaseURL, "old-base-url", "https://api.getconvoy.io", "Base URL of your previous deployment")
+	cmd.PersistentFlags().StringVar(&oldBaseURL, "old-base-url", "https://dashboard.getconvoy.io", "Base URL of your previous deployment")
 	cmd.PersistentFlags().StringVar(&oldPGDSN, "old-pg-dsn", "", "DSN of your previous postgres DB")
 	cmd.PersistentFlags().StringVar(&newPGDSN, "new-pg-dsn", "", "DSN of your current postgres DB")
 	cmd.PersistentFlags().StringVar(&personalAccessKey, "pat", "", "Your User Personal Access Token(from old deployment)")

@@ -4,23 +4,27 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	ncache "github.com/frain-dev/convoy/cache/noop"
+	"github.com/frain-dev/convoy/database/postgres"
 
 	"github.com/frain-dev/convoy/datastore"
 	"github.com/frain-dev/convoy/util"
 )
 
 func (m *Migrator) RunSourceMigration() error {
+	sourceRepo := postgres.NewSourceRepo(m, ncache.NewNoopCache())
 	for _, p := range m.projects {
-		sources, err := m.loadProjectSources(p.OrganisationID, p.UID, pagedResponse{})
+		sources, err := m.loadProjectSources(sourceRepo, p.UID, defaultPageable)
 		if err != nil {
 			return err
 		}
 
-		err = m.SaveSources(context.Background(), sources)
-		if err != nil {
-			return fmt.Errorf("failed to save sources: %v", err)
+		if len(sources) > 0 {
+			err = m.SaveSources(context.Background(), sources)
+			if err != nil {
+				return fmt.Errorf("failed to save sources: %v", err)
+			}
 		}
-		return nil
 	}
 
 	return nil
@@ -76,7 +80,6 @@ func (s *Migrator) SaveSources(ctx context.Context, sources []datastore.Source) 
 		}
 
 		if !util.IsStringEmpty(string(source.Verifier.Type)) {
-			source.VerifierID = ulid.Make().String()
 			sourceVerifierID = &source.VerifierID
 
 			sourceVerifierValues = append(sourceVerifierValues, map[string]interface{}{

@@ -13,23 +13,19 @@ import (
 
 func (m *Migrator) RunEventDeliveriesMigration() error {
 	eventDeliveryRepo := postgres.NewEventDeliveryRepo(m, ncache.NewNoopCache())
-	pageable := datastore.Pageable{
-		PerPage:    1000,
-		Direction:  "next",
-		NextCursor: "",
-	}
 
 	for _, p := range m.projects {
-		events, err := m.loadEventDeliveries(eventDeliveryRepo, &p, pageable)
+		deliveries, err := m.loadEventDeliveries(eventDeliveryRepo, p, defaultPageable)
 		if err != nil {
 			return err
 		}
 
-		err = m.SaveEventDeliveries(context.Background(), events)
-		if err != nil {
-			return fmt.Errorf("failed to save events: %v", err)
+		if len(deliveries) > 0 {
+			err = m.SaveEventDeliveries(context.Background(), deliveries)
+			if err != nil {
+				return fmt.Errorf("failed to save deliveries: %v", err)
+			}
 		}
-		return nil
 	}
 
 	return nil

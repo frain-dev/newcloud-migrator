@@ -3,23 +3,27 @@ package main
 import (
 	"context"
 	"fmt"
+	ncache "github.com/frain-dev/convoy/cache/noop"
+	"github.com/frain-dev/convoy/database/postgres"
 
 	"github.com/frain-dev/convoy/datastore"
 	"github.com/frain-dev/convoy/util"
 )
 
 func (m *Migrator) RunSubscriptionMigration() error {
+	subRepo := postgres.NewSubscriptionRepo(m, ncache.NewNoopCache())
 	for _, p := range m.projects {
-		subscriptions, err := m.loadProjectSubscriptions(p.OrganisationID, p.UID, pagedResponse{})
+		subscriptions, err := m.loadProjectSubscriptions(subRepo, p.UID, defaultPageable)
 		if err != nil {
 			return err
 		}
 
-		err = m.SaveSubscriptions(context.Background(), subscriptions)
-		if err != nil {
-			return fmt.Errorf("failed to save subscriptions: %v", err)
+		if len(subscriptions) > 0 {
+			err = m.SaveSubscriptions(context.Background(), subscriptions)
+			if err != nil {
+				return fmt.Errorf("failed to save subscriptions: %v", err)
+			}
 		}
-		return nil
 	}
 
 	return nil
