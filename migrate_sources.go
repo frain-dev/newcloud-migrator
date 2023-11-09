@@ -25,6 +25,10 @@ func (m *Migrator) RunSourceMigration() error {
 				return fmt.Errorf("failed to save sources: %v", err)
 			}
 		}
+
+		for _, source := range sources {
+			m.sourceIDs[source.UID] = struct{}{}
+		}
 	}
 
 	return nil

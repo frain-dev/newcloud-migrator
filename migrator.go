@@ -18,6 +18,9 @@ type Migrator struct {
 	userOrgs []datastore.Organisation
 	projects []*datastore.Project
 
+	endpointIDs map[string]struct{}
+	sourceIDs   map[string]struct{}
+
 	newDB *sqlx.DB
 	oldDB *sqlx.DB
 }
@@ -46,8 +49,10 @@ func NewMigrator(oldBaseURL string, oldPostgresDSN string, newPostgresDSN string
 		PAT:            PAT,
 		MigrateEvents:  migrateEvents,
 
-		oldDB: oldDB,
-		newDB: newDB,
+		oldDB:       oldDB,
+		newDB:       newDB,
+		endpointIDs: map[string]struct{}{},
+		sourceIDs:   map[string]struct{}{},
 	}, nil
 }
 

@@ -24,6 +24,10 @@ func (m *Migrator) RunEndpointMigration() error {
 				return fmt.Errorf("failed to save endpoints: %v", err)
 			}
 		}
+
+		for _, endpoint := range endpoints {
+			m.endpointIDs[endpoint.UID] = struct{}{}
+		}
 	}
 
 	return nil

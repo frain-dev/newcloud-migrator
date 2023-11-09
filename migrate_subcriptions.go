@@ -58,6 +58,14 @@ func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datast
 	values := make([]map[string]interface{}, 0, len(subscriptions))
 	for _, subscription := range subscriptions {
 
+		if _, ok := s.endpointIDs[subscription.EndpointID]; !ok {
+			continue
+		}
+
+		if _, ok := s.sourceIDs[subscription.SourceID]; !ok {
+			continue
+		}
+
 		ac := subscription.GetAlertConfig()
 		rc := subscription.GetRetryConfig()
 		fc := subscription.GetFilterConfig()
@@ -75,6 +83,8 @@ func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datast
 		if !util.IsStringEmpty(subscription.DeviceID) {
 			deviceID = &subscription.DeviceID
 		}
+
+		fmt.Println(" endpointID, sourceID, deviceID ", *endpointID, *sourceID, deviceID)
 
 		values = append(values, map[string]interface{}{
 			"id":                           subscription.UID,
