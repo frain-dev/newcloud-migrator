@@ -45,7 +45,6 @@ func (m *Migrator) RunOrgMigration() error {
 			userIDs[mr.UserID] = struct{}{}
 		}
 
-		fmt.Println("mm", mm)
 		members = append(members, mm...)
 	}
 
@@ -84,7 +83,9 @@ const (
 func (m *Migrator) SaveOrganisations(ctx context.Context, orgs []datastore.Organisation) error {
 	values := make([]map[string]interface{}, 0, len(orgs))
 
-	for _, org := range orgs {
+	for i := range orgs {
+		org := &orgs[i]
+
 		values = append(values, map[string]interface{}{
 			"id":              org.UID,
 			"name":            org.Name,

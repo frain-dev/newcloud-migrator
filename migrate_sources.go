@@ -66,7 +66,9 @@ func (s *Migrator) SaveSources(ctx context.Context, sources []datastore.Source) 
 	sourceValues := make([]map[string]interface{}, 0, len(sources))
 	sourceVerifierValues := make([]map[string]interface{}, 0, len(sources))
 
-	for _, source := range sources {
+	for i := range sources {
+		source := &sources[i]
+
 		var (
 			sourceVerifierID *string
 			hmac             datastore.HMac

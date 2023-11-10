@@ -16,14 +16,12 @@ import (
 
 func (m *Migrator) RunProjectMigration() error {
 	projectRepo := postgres.NewProjectRepo(m, ncache.NewNoopCache())
-	fmt.Println("ddd", m.userOrgs)
+
 	for _, org := range m.userOrgs {
 		projects, err := m.loadOrgProjects(projectRepo, org.UID)
 		if err != nil {
 			return err
 		}
-
-		fmt.Println("fff", projects)
 
 		if len(projects) > 0 {
 			err = m.SaveProjects(context.Background(), projects)
@@ -80,6 +78,7 @@ func (m *Migrator) SaveProjects(ctx context.Context, projects []*datastore.Proje
 	cfgs := make([]map[string]interface{}, 0, len(projects))
 
 	for _, project := range projects {
+
 		prValues = append(prValues, map[string]interface{}{
 			"id":                       project.UID,
 			"name":                     project.Name,

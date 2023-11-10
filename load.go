@@ -75,8 +75,6 @@ func (m *Migrator) loadOrganisations(pageable pagedResponse) ([]datastore.Organi
 		return nil, fmt.Errorf("failed to read orgs body: %v", err)
 	}
 
-	fmt.Println("ord", orgs)
-
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
 		return nil, fmt.Errorf("request failed: %d", resp.StatusCode)
 	}
@@ -116,8 +114,6 @@ func (m *Migrator) loadProjectEndpoints(endpointRepo datastore.EndpointRepositor
 		return nil, err
 	}
 
-	fmt.Println("vvv", endpoints)
-
 	if paginationData.HasNextPage {
 		pageable.NextCursor = endpoints[len(endpoints)-1].UID
 		moreEndpoints, err := m.loadProjectEndpoints(endpointRepo, projectID, pageable)
@@ -141,8 +137,6 @@ func (m *Migrator) loadProjectSources(sourceRepo datastore.SourceRepository, pro
 		return nil, err
 	}
 
-	fmt.Println("vvv", sources)
-
 	if paginationData.HasNextPage {
 		pageable.NextCursor = sources[len(sources)-1].UID
 		moreSources, err := m.loadProjectSources(sourceRepo, projectID, pageable)
@@ -161,8 +155,6 @@ func (m *Migrator) loadProjectSubscriptions(subRepo datastore.SubscriptionReposi
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("vvv", subscriptions)
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = subscriptions[len(subscriptions)-1].UID
@@ -211,8 +203,6 @@ func (m *Migrator) loadOrgMembers(orgMemberRepo datastore.OrganisationMemberRepo
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Println("vvv", members)
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = members[len(members)-1].UID

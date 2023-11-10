@@ -49,7 +49,9 @@ const (
 func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datastore.EventDelivery) error {
 	values := make([]map[string]interface{}, 0, len(deliveries))
 
-	for _, delivery := range deliveries {
+	for i := range deliveries {
+		delivery := &deliveries[i]
+
 		var endpointID *string
 		var deviceID *string
 
@@ -58,7 +60,7 @@ func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datasto
 		}
 
 		if !util.IsStringEmpty(delivery.DeviceID) {
-			deviceID = &delivery.DeviceID
+			continue // ignore cli event deliveries
 		}
 
 		values = append(values, map[string]interface{}{
@@ -80,6 +82,9 @@ func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datasto
 		})
 	}
 
-	_, err := e.newDB.NamedExecContext(ctx, saveEventDeliveries, values)
-	return err
+	if len(values) > 0 {
+		_, err := e.newDB.NamedExecContext(ctx, saveEventDeliveries, values)
+		return err
+	}
+	return nil
 }

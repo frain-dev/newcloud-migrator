@@ -54,7 +54,9 @@ const (
 func (m *Migrator) SaveEndpoints(ctx context.Context, endpoints []datastore.Endpoint) error {
 	values := make([]map[string]interface{}, 0, len(endpoints))
 
-	for _, endpoint := range endpoints {
+	for i := range endpoints {
+		endpoint := &endpoints[i]
+
 		ac := endpoint.GetAuthConfig()
 
 		values = append(values, map[string]interface{}{

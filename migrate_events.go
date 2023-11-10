@@ -55,7 +55,9 @@ func (e *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) err
 	ev := make([]map[string]interface{}, 0, len(events))
 	evEndpoints := make([]postgres.EventEndpoint, 0, len(events)*2)
 
-	for _, event := range events {
+	for i := range events {
+		event := &events[i]
+
 		var sourceID *string
 
 		if !util.IsStringEmpty(event.SourceID) {

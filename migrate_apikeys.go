@@ -61,7 +61,8 @@ const (
 func (a *Migrator) SaveAPIKeys(ctx context.Context, keys []datastore.APIKey) error {
 	values := make([]map[string]interface{}, 0, len(keys))
 
-	for _, key := range keys {
+	for i := range keys {
+		key := &keys[i]
 		var (
 			userID     *string
 			endpointID *string
@@ -103,6 +104,9 @@ func (a *Migrator) SaveAPIKeys(ctx context.Context, keys []datastore.APIKey) err
 		})
 	}
 
-	_, err := a.newDB.NamedExecContext(ctx, saveAPIKeys, values)
-	return err
+	if len(values) > 0 {
+		_, err := a.newDB.NamedExecContext(ctx, saveAPIKeys, values)
+		return err
+	}
+	return nil
 }

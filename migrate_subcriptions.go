@@ -5,9 +5,9 @@ import (
 	"fmt"
 	ncache "github.com/frain-dev/convoy/cache/noop"
 	"github.com/frain-dev/convoy/database/postgres"
-
 	"github.com/frain-dev/convoy/datastore"
 	"github.com/frain-dev/convoy/util"
+	"github.com/kr/pretty"
 )
 
 func (m *Migrator) RunSubscriptionMigration() error {
@@ -18,11 +18,9 @@ func (m *Migrator) RunSubscriptionMigration() error {
 			return err
 		}
 
-		if len(subscriptions) > 0 {
-			err = m.SaveSubscriptions(context.Background(), subscriptions)
-			if err != nil {
-				return fmt.Errorf("failed to save subscriptions: %v", err)
-			}
+		err = m.SaveSubscriptions(context.Background(), subscriptions)
+		if err != nil {
+			return fmt.Errorf("failed to save subscriptions: %v", err)
 		}
 	}
 
@@ -55,16 +53,9 @@ const (
 )
 
 func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datastore.Subscription) error {
-	values := make([]map[string]interface{}, 0, len(subscriptions))
-	for _, subscription := range subscriptions {
-
-		if _, ok := s.endpointIDs[subscription.EndpointID]; !ok {
-			continue
-		}
-
-		if _, ok := s.sourceIDs[subscription.SourceID]; !ok {
-			continue
-		}
+	values := make([]map[string]interface{}, 0)
+	for i := range subscriptions {
+		subscription := &subscriptions[i]
 
 		ac := subscription.GetAlertConfig()
 		rc := subscription.GetRetryConfig()
@@ -73,18 +64,24 @@ func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datast
 
 		var endpointID, sourceID, deviceID *string
 		if !util.IsStringEmpty(subscription.EndpointID) {
+			if _, ok := s.endpointIDs[subscription.EndpointID]; !ok {
+				continue
+			}
+
 			endpointID = &subscription.EndpointID
 		}
 
 		if !util.IsStringEmpty(subscription.SourceID) {
+			if _, ok := s.sourceIDs[subscription.SourceID]; !ok {
+				continue
+			}
+
 			sourceID = &subscription.SourceID
 		}
 
 		if !util.IsStringEmpty(subscription.DeviceID) {
-			deviceID = &subscription.DeviceID
+			continue // ignore cli subscriptions
 		}
-
-		fmt.Println(" endpointID, sourceID, deviceID ", *endpointID, *sourceID, deviceID)
 
 		values = append(values, map[string]interface{}{
 			"id":                           subscription.UID,
@@ -109,9 +106,15 @@ func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datast
 			"deleted_at":                   subscription.DeletedAt,
 			"function":                     subscription.Function,
 		})
-
 	}
 
-	_, err := s.newDB.NamedExecContext(ctx, createSubscription, values)
-	return err
+	pretty.Println("final vals", values)
+
+	if len(values) > 0 {
+		_, err := s.newDB.NamedExecContext(ctx, createSubscription, values)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
