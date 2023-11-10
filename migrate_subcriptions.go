@@ -22,6 +22,10 @@ func (m *Migrator) RunSubscriptionMigration() error {
 		if err != nil {
 			return fmt.Errorf("failed to save subscriptions: %v", err)
 		}
+
+		for _, subscription := range subscriptions {
+			m.subIDs[subscription.UID] = struct{}{}
+		}
 	}
 
 	return nil

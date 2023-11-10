@@ -21,6 +21,8 @@ func (m *Migrator) RunEventMigration() error {
 			return err
 		}
 
+		fmt.Println("events", events)
+
 		if len(events) > 0 {
 			err = m.SaveEvents(context.Background(), events)
 			if err != nil {
@@ -60,7 +62,17 @@ func (e *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) err
 
 		var sourceID *string
 
+		for _, endpointID := range event.Endpoints {
+			if _, ok := e.endpointIDs[endpointID]; !ok {
+				continue
+			}
+		}
+
 		if !util.IsStringEmpty(event.SourceID) {
+			if _, ok := e.sourceIDs[event.SourceID]; !ok {
+				continue
+			}
+
 			sourceID = &event.SourceID
 		}
 
@@ -95,15 +107,19 @@ func (e *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) err
 
 	defer rollbackTx(tx)
 
-	_, err = tx.NamedExecContext(ctx, saveEvents, ev)
-	if err != nil {
-		return err
-	}
+	fmt.Println("event valss", ev)
 
-	if len(evEndpoints) > 0 {
-		_, err = tx.NamedExecContext(ctx, createEventEndpoints, evEndpoints)
+	if len(ev) > 0 {
+		_, err = tx.NamedExecContext(ctx, saveEvents, ev)
 		if err != nil {
 			return err
+		}
+
+		if len(evEndpoints) > 0 {
+			_, err = tx.NamedExecContext(ctx, createEventEndpoints, evEndpoints)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

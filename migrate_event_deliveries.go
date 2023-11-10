@@ -34,12 +34,12 @@ func (m *Migrator) RunEventDeliveriesMigration() error {
 const (
 	saveEventDeliveries = `
     INSERT INTO convoy.event_deliveries (
-          id, project_id, event_id, endpoint_id, device_id, subscription_id,
+          id, project_id, event_id, endpoint_id, subscription_id,
           headers, attempts, status, metadata, cli_metadata, description,
           created_at, updated_at, deleted_at
           )
     VALUES (
-        :id, :project_id, :event_id, :endpoint_id, :device_id,
+        :id, :project_id, :event_id, :endpoint_id,
         :subscription_id, :headers, :attempts, :status, :metadata,
         :cli_metadata, :description, :created_at, :updated_at, :deleted_at
     )
@@ -53,10 +53,17 @@ func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datasto
 		delivery := &deliveries[i]
 
 		var endpointID *string
-		var deviceID *string
 
 		if !util.IsStringEmpty(delivery.EndpointID) {
+			if _, ok := e.endpointIDs[delivery.EndpointID]; !ok {
+				continue
+			}
+
 			endpointID = &delivery.EndpointID
+		}
+
+		if _, ok := e.subIDs[delivery.SubscriptionID]; !ok {
+			continue
 		}
 
 		if !util.IsStringEmpty(delivery.DeviceID) {
@@ -68,7 +75,6 @@ func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datasto
 			"project_id":      delivery.ProjectID,
 			"event_id":        delivery.EventID,
 			"endpoint_id":     endpointID,
-			"device_id":       deviceID,
 			"subscription_id": delivery.SubscriptionID,
 			"headers":         delivery.Headers,
 			"attempts":        delivery.DeliveryAttempts,

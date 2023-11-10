@@ -10,6 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"time"
 )
 
 type pagedResponse struct {
@@ -237,6 +238,10 @@ func (m *Migrator) loadEvents(eventRepo datastore.EventRepository, project *data
 	f := &datastore.Filter{
 		Project:  project,
 		Pageable: pageable,
+		SearchParams: datastore.SearchParams{
+			CreatedAtStart: 0,
+			CreatedAtEnd:   time.Now().Unix(),
+		},
 	}
 
 	events, paginationData, err := eventRepo.LoadEventsPaged(context.Background(), project.UID, f)
@@ -260,7 +265,10 @@ func (m *Migrator) loadEvents(eventRepo datastore.EventRepository, project *data
 func (m *Migrator) loadEventDeliveries(eventDeliveryRepository datastore.EventDeliveryRepository, project *datastore.Project, pageable datastore.Pageable) ([]datastore.EventDelivery, error) {
 	eventDeliveries, paginationData, err := eventDeliveryRepository.LoadEventDeliveriesPaged(
 		context.Background(),
-		project.UID, nil, "", "", nil, datastore.SearchParams{}, pageable, "",
+		project.UID, nil, "", "", nil, datastore.SearchParams{
+			CreatedAtStart: 0,
+			CreatedAtEnd:   time.Now().Unix(),
+		}, pageable, "",
 	)
 	if err != nil {
 		return nil, err

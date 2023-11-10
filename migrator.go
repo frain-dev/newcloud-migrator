@@ -20,6 +20,7 @@ type Migrator struct {
 
 	endpointIDs map[string]struct{}
 	sourceIDs   map[string]struct{}
+	subIDs      map[string]struct{}
 
 	newDB *sqlx.DB
 	oldDB *sqlx.DB
@@ -53,6 +54,7 @@ func NewMigrator(oldBaseURL string, oldPostgresDSN string, newPostgresDSN string
 		newDB:       newDB,
 		endpointIDs: map[string]struct{}{},
 		sourceIDs:   map[string]struct{}{},
+		subIDs:      map[string]struct{}{},
 	}, nil
 }
 
