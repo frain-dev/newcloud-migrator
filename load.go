@@ -310,13 +310,17 @@ func (m *Migrator) loadEventDeliveries(eventDeliveryRepository datastore.EventDe
 		if err != nil {
 			return fmt.Errorf("failed to save deliveries: %v", err)
 		}
+
+		for i := range eventDeliveries {
+			m.deliveryIDs[eventDeliveries[i].UID] = struct{}{}
+		}
 	}
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = eventDeliveries[len(eventDeliveries)-1].UID
 		err := m.loadEventDeliveries(eventDeliveryRepository, project, pageable)
 		if err != nil {
-			log.WithError(err).Errorf("failed to load next event page, next cursor is %s", paginationData.NextPageCursor)
+			log.WithError(err).Errorf("failed to load next deliveries page, next cursor is %s", paginationData.NextPageCursor)
 		}
 
 	}
