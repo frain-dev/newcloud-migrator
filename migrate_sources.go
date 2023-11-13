@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	ncache "github.com/frain-dev/convoy/cache/noop"
 	"github.com/frain-dev/convoy/database/postgres"
 
@@ -14,21 +13,11 @@ import (
 func (m *Migrator) RunSourceMigration() error {
 	sourceRepo := postgres.NewSourceRepo(m, ncache.NewNoopCache())
 	for _, p := range m.projects {
-		sources, err := m.loadProjectSources(sourceRepo, p.UID, defaultPageable)
+		err := m.loadProjectSources(sourceRepo, p.UID, defaultPageable)
 		if err != nil {
 			return err
 		}
 
-		if len(sources) > 0 {
-			err = m.SaveSources(context.Background(), sources)
-			if err != nil {
-				return fmt.Errorf("failed to save sources: %v", err)
-			}
-		}
-
-		for _, source := range sources {
-			m.sourceIDs[source.UID] = struct{}{}
-		}
 	}
 
 	return nil

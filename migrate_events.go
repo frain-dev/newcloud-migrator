@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"database/sql"
-	"fmt"
-
 	ncache "github.com/frain-dev/convoy/cache/noop"
 	"github.com/frain-dev/convoy/database/postgres"
 
@@ -16,18 +14,9 @@ func (m *Migrator) RunEventMigration() error {
 	eventRepo := postgres.NewEventRepo(m, ncache.NewNoopCache())
 
 	for _, p := range m.projects {
-		events, err := m.loadEvents(eventRepo, p, defaultPageable)
+		err := m.loadEvents(eventRepo, p, defaultPageable)
 		if err != nil {
 			return err
-		}
-
-		fmt.Println("events", events)
-
-		if len(events) > 0 {
-			err = m.SaveEvents(context.Background(), events)
-			if err != nil {
-				return fmt.Errorf("failed to save events: %v", err)
-			}
 		}
 	}
 
@@ -57,8 +46,21 @@ func (e *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) err
 	ev := make([]map[string]interface{}, 0, len(events))
 	evEndpoints := make([]postgres.EventEndpoint, 0, len(events)*2)
 
+	dedupe := map[string]int{}
+
 	for i := range events {
 		event := &events[i]
+
+		if _, ok := e.eventIDs[event.UID]; ok { //if previously saved, ignore
+			continue
+		}
+
+		switch dedupe[event.UID] {
+		case 0:
+			dedupe[event.UID] = 1
+		case 1:
+			continue
+		}
 
 		var sourceID *string
 
@@ -106,8 +108,6 @@ func (e *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) err
 	}
 
 	defer rollbackTx(tx)
-
-	fmt.Println("event valss", ev)
 
 	if len(ev) > 0 {
 		_, err = tx.NamedExecContext(ctx, saveEvents, ev)

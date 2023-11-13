@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-
 	ncache "github.com/frain-dev/convoy/cache/noop"
 	"github.com/frain-dev/convoy/database/postgres"
 
@@ -15,16 +13,9 @@ func (m *Migrator) RunEventDeliveriesMigration() error {
 	eventDeliveryRepo := postgres.NewEventDeliveryRepo(m, ncache.NewNoopCache())
 
 	for _, p := range m.projects {
-		deliveries, err := m.loadEventDeliveries(eventDeliveryRepo, p, defaultPageable)
+		err := m.loadEventDeliveries(eventDeliveryRepo, p, defaultPageable)
 		if err != nil {
 			return err
-		}
-
-		if len(deliveries) > 0 {
-			err = m.SaveEventDeliveries(context.Background(), deliveries)
-			if err != nil {
-				return fmt.Errorf("failed to save deliveries: %v", err)
-			}
 		}
 	}
 
@@ -48,9 +39,21 @@ const (
 
 func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datastore.EventDelivery) error {
 	values := make([]map[string]interface{}, 0, len(deliveries))
+	dedupe := map[string]int{}
 
 	for i := range deliveries {
 		delivery := &deliveries[i]
+
+		if _, ok := e.deliveryIDs[delivery.UID]; ok { //if previously saved, ignore
+			continue
+		}
+
+		switch dedupe[delivery.UID] {
+		case 0:
+			dedupe[delivery.UID] = 1
+		case 1:
+			continue
+		}
 
 		var endpointID *string
 
@@ -60,6 +63,10 @@ func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datasto
 			}
 
 			endpointID = &delivery.EndpointID
+		}
+
+		if _, ok := e.eventIDs[delivery.EventID]; !ok {
+			continue
 		}
 
 		if _, ok := e.subIDs[delivery.SubscriptionID]; !ok {

@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/frain-dev/convoy/auth"
 
 	ncache "github.com/frain-dev/convoy/cache/noop"
@@ -18,30 +16,16 @@ func (m *Migrator) RunAPIKeyMigration() error {
 
 	// migrate project api keys
 	for _, p := range m.projects {
-		keys, err := m.loadAPIKeys(apiKeyRepo, p.UID, "", defaultPageable)
+		err := m.loadAPIKeys(apiKeyRepo, p.UID, "", defaultPageable)
 		if err != nil {
 			return err
-		}
-
-		if len(keys) > 0 {
-			err = m.SaveAPIKeys(context.Background(), keys)
-			if err != nil {
-				return fmt.Errorf("failed to save project keys: %v", err)
-			}
 		}
 	}
 
 	// migrate user api keys
-	userKeys, err := m.loadAPIKeys(apiKeyRepo, "", m.user.UID, defaultPageable)
+	err := m.loadAPIKeys(apiKeyRepo, "", m.user.UID, defaultPageable)
 	if err != nil {
 		return err
-	}
-
-	if len(userKeys) > 0 {
-		err = m.SaveAPIKeys(context.Background(), userKeys)
-		if err != nil {
-			return fmt.Errorf("failed to save user keys: %v", err)
-		}
 	}
 
 	return nil

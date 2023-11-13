@@ -2,29 +2,18 @@ package main
 
 import (
 	"context"
-	"fmt"
 	ncache "github.com/frain-dev/convoy/cache/noop"
 	"github.com/frain-dev/convoy/database/postgres"
 	"github.com/frain-dev/convoy/datastore"
 	"github.com/frain-dev/convoy/util"
-	"github.com/kr/pretty"
 )
 
 func (m *Migrator) RunSubscriptionMigration() error {
 	subRepo := postgres.NewSubscriptionRepo(m, ncache.NewNoopCache())
 	for _, p := range m.projects {
-		subscriptions, err := m.loadProjectSubscriptions(subRepo, p.UID, defaultPageable)
+		err := m.loadProjectSubscriptions(subRepo, p.UID, defaultPageable)
 		if err != nil {
 			return err
-		}
-
-		err = m.SaveSubscriptions(context.Background(), subscriptions)
-		if err != nil {
-			return fmt.Errorf("failed to save subscriptions: %v", err)
-		}
-
-		for _, subscription := range subscriptions {
-			m.subIDs[subscription.UID] = struct{}{}
 		}
 	}
 
@@ -111,8 +100,6 @@ func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datast
 			"function":                     subscription.Function,
 		})
 	}
-
-	pretty.Println("final vals", values)
 
 	if len(values) > 0 {
 		_, err := s.newDB.NamedExecContext(ctx, createSubscription, values)

@@ -132,45 +132,62 @@ func (m *Migrator) addHeader(r *http.Request) {
 	r.Header.Add("Authorization", "Bearer "+m.PAT)
 }
 
-func (m *Migrator) loadProjectSources(sourceRepo datastore.SourceRepository, projectID string, pageable datastore.Pageable) ([]datastore.Source, error) {
+func (m *Migrator) loadProjectSources(sourceRepo datastore.SourceRepository, projectID string, pageable datastore.Pageable) error {
 	sources, paginationData, err := sourceRepo.LoadSourcesPaged(context.Background(), projectID, &datastore.SourceFilter{}, pageable)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	if len(sources) > 0 {
+		err = m.SaveSources(context.Background(), sources)
+		if err != nil {
+			return fmt.Errorf("failed to save sources: %v", err)
+		}
+	}
+
+	for _, source := range sources {
+		m.sourceIDs[source.UID] = struct{}{}
 	}
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = sources[len(sources)-1].UID
-		moreSources, err := m.loadProjectSources(sourceRepo, projectID, pageable)
+		err := m.loadProjectSources(sourceRepo, projectID, pageable)
 		if err != nil {
 			log.WithError(err).Errorf("failed to load next members page, next cursor is %s", paginationData.NextPageCursor)
 		}
-
-		sources = append(sources, moreSources...)
 	}
 
-	return sources, nil
+	return nil
 }
 
-func (m *Migrator) loadProjectSubscriptions(subRepo datastore.SubscriptionRepository, projectID string, pageable datastore.Pageable) ([]datastore.Subscription, error) {
+func (m *Migrator) loadProjectSubscriptions(subRepo datastore.SubscriptionRepository, projectID string, pageable datastore.Pageable) error {
 	subscriptions, paginationData, err := subRepo.LoadSubscriptionsPaged(context.Background(), projectID, &datastore.FilterBy{}, pageable)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	err = m.SaveSubscriptions(context.Background(), subscriptions)
+	if err != nil {
+		return fmt.Errorf("failed to save subscriptions: %v", err)
+	}
+
+	for _, subscription := range subscriptions {
+		m.subIDs[subscription.UID] = struct{}{}
 	}
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = subscriptions[len(subscriptions)-1].UID
-		moreSubscriptions, err := m.loadProjectSubscriptions(subRepo, projectID, pageable)
+		err := m.loadProjectSubscriptions(subRepo, projectID, pageable)
 		if err != nil {
 			log.WithError(err).Errorf("failed to load next members page, next cursor is %s", paginationData.NextPageCursor)
 		}
 
-		subscriptions = append(subscriptions, moreSubscriptions...)
 	}
 
-	return subscriptions, nil
+	return nil
 }
 
-func (m *Migrator) loadAPIKeys(apiKeyRepo datastore.APIKeyRepository, projectID, userID string, pageable datastore.Pageable) ([]datastore.APIKey, error) {
+func (m *Migrator) loadAPIKeys(apiKeyRepo datastore.APIKeyRepository, projectID, userID string, pageable datastore.Pageable) error {
 	f := &datastore.ApiKeyFilter{
 		ProjectID: projectID,
 	}
@@ -183,20 +200,25 @@ func (m *Migrator) loadAPIKeys(apiKeyRepo datastore.APIKeyRepository, projectID,
 
 	keys, paginationData, err := apiKeyRepo.LoadAPIKeysPaged(context.Background(), f, &pageable)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	if len(keys) > 0 {
+		err = m.SaveAPIKeys(context.Background(), keys)
+		if err != nil {
+			return fmt.Errorf("failed to save project keys: %v", err)
+		}
 	}
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = keys[len(keys)-1].UID
-		moreKeys, err := m.loadAPIKeys(apiKeyRepo, projectID, userID, pageable)
+		err := m.loadAPIKeys(apiKeyRepo, projectID, userID, pageable)
 		if err != nil {
 			log.WithError(err).Errorf("failed to load next api keys page, next cursor is %s", paginationData.NextPageCursor)
 		}
-
-		keys = append(keys, moreKeys...)
 	}
 
-	return keys, nil
+	return nil
 }
 
 func (m *Migrator) loadOrgMembers(orgMemberRepo datastore.OrganisationMemberRepository, orgID string, pageable datastore.Pageable) ([]*datastore.OrganisationMember, error) {
@@ -234,7 +256,7 @@ func (m *Migrator) loadUsers(userIDs map[string]struct{}) ([]*datastore.User, er
 	return users, nil
 }
 
-func (m *Migrator) loadEvents(eventRepo datastore.EventRepository, project *datastore.Project, pageable datastore.Pageable) ([]datastore.Event, error) {
+func (m *Migrator) loadEvents(eventRepo datastore.EventRepository, project *datastore.Project, pageable datastore.Pageable) error {
 	f := &datastore.Filter{
 		Project:  project,
 		Pageable: pageable,
@@ -246,23 +268,32 @@ func (m *Migrator) loadEvents(eventRepo datastore.EventRepository, project *data
 
 	events, paginationData, err := eventRepo.LoadEventsPaged(context.Background(), project.UID, f)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	if len(events) > 0 {
+		err = m.SaveEvents(context.Background(), events)
+		if err != nil {
+			return fmt.Errorf("failed to save events: %v", err)
+		}
+
+		for _, event := range events {
+			m.eventIDs[event.UID] = struct{}{}
+		}
 	}
 
 	if paginationData.HasNextPage {
 		f.Pageable.NextCursor = events[len(events)-1].UID
-		moreEvents, err := m.loadEvents(eventRepo, project, pageable)
+		err := m.loadEvents(eventRepo, project, f.Pageable)
 		if err != nil {
 			log.WithError(err).Errorf("failed to load next event page, next cursor is %s", paginationData.NextPageCursor)
 		}
-
-		events = append(events, moreEvents...)
 	}
 
-	return events, nil
+	return nil
 }
 
-func (m *Migrator) loadEventDeliveries(eventDeliveryRepository datastore.EventDeliveryRepository, project *datastore.Project, pageable datastore.Pageable) ([]datastore.EventDelivery, error) {
+func (m *Migrator) loadEventDeliveries(eventDeliveryRepository datastore.EventDeliveryRepository, project *datastore.Project, pageable datastore.Pageable) error {
 	eventDeliveries, paginationData, err := eventDeliveryRepository.LoadEventDeliveriesPaged(
 		context.Background(),
 		project.UID, nil, "", "", nil, datastore.SearchParams{
@@ -271,18 +302,24 @@ func (m *Migrator) loadEventDeliveries(eventDeliveryRepository datastore.EventDe
 		}, pageable, "",
 	)
 	if err != nil {
-		return nil, err
+		return err
+	}
+
+	if len(eventDeliveries) > 0 {
+		err = m.SaveEventDeliveries(context.Background(), eventDeliveries)
+		if err != nil {
+			return fmt.Errorf("failed to save deliveries: %v", err)
+		}
 	}
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = eventDeliveries[len(eventDeliveries)-1].UID
-		moreEventDeliveries, err := m.loadEventDeliveries(eventDeliveryRepository, project, pageable)
+		err := m.loadEventDeliveries(eventDeliveryRepository, project, pageable)
 		if err != nil {
 			log.WithError(err).Errorf("failed to load next event page, next cursor is %s", paginationData.NextPageCursor)
 		}
 
-		eventDeliveries = append(eventDeliveries, moreEventDeliveries...)
 	}
 
-	return eventDeliveries, nil
+	return nil
 }

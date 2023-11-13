@@ -19,6 +19,8 @@ type Migrator struct {
 	projects []*datastore.Project
 
 	endpointIDs map[string]struct{}
+	eventIDs    map[string]struct{}
+	deliveryIDs map[string]struct{}
 	sourceIDs   map[string]struct{}
 	subIDs      map[string]struct{}
 
@@ -27,7 +29,7 @@ type Migrator struct {
 }
 
 var defaultPageable = datastore.Pageable{
-	PerPage:    1000,
+	PerPage:    3500,
 	Direction:  datastore.Next,
 	NextCursor: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF",
 }
@@ -55,6 +57,8 @@ func NewMigrator(oldBaseURL string, oldPostgresDSN string, newPostgresDSN string
 		endpointIDs: map[string]struct{}{},
 		sourceIDs:   map[string]struct{}{},
 		subIDs:      map[string]struct{}{},
+		eventIDs:    map[string]struct{}{},
+		deliveryIDs: map[string]struct{}{},
 	}, nil
 }
 
