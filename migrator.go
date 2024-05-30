@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/frain-dev/convoy/database/hooks"
 	"github.com/frain-dev/convoy/datastore"
 	"github.com/jmoiron/sqlx"
+	log "github.com/sirupsen/logrus"
 )
 
 type Migrator struct {
@@ -26,6 +30,24 @@ type Migrator struct {
 
 	newDB *sqlx.DB
 	oldDB *sqlx.DB
+}
+
+func (m *Migrator) BeginTx(ctx context.Context) (*sqlx.Tx, error) {
+	return m.newDB.BeginTxx(ctx, nil)
+}
+
+func (m *Migrator) Rollback(tx *sqlx.Tx, err error) {
+	if err != nil {
+		rbErr := tx.Rollback()
+		log.WithError(rbErr).Error("failed to roll back transaction")
+	}
+
+	cmErr := tx.Commit()
+	if cmErr != nil && !errors.Is(cmErr, sql.ErrTxDone) {
+		log.WithError(cmErr).Error("failed to commit tx rolling back transaction")
+		rbErr := tx.Rollback()
+		log.WithError(rbErr).Error("failed to roll back transaction")
+	}
 }
 
 var defaultPageable = datastore.Pageable{
