@@ -117,6 +117,7 @@ func (m *Migrator) SaveProjects(ctx context.Context, projects []*datastore.Proje
 			"meta_events_secret":                meta.Secret,
 			"meta_events_pub_sub":               meta.PubSub,
 			"search_policy":                     rc.SearchPolicy,
+			"multiple_endpoint_subscriptions":   false,
 		})
 	}
 
