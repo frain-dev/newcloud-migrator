@@ -51,7 +51,7 @@ func (m *Migrator) Rollback(tx *sqlx.Tx, err error) {
 }
 
 var defaultPageable = datastore.Pageable{
-	PerPage:    3500,
+	PerPage:    500,
 	Direction:  datastore.Next,
 	NextCursor: "FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF",
 }

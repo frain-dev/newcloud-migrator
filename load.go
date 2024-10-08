@@ -320,6 +320,8 @@ func (m *Migrator) loadEvents(eventRepo datastore.EventRepository, project *data
 			return fmt.Errorf("failed to save events: %v", err)
 		}
 
+		fmt.Printf("Saved %v events", len(events))
+
 		for _, event := range events {
 			m.eventIDs[event.UID] = struct{}{}
 		}
