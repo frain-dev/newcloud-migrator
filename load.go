@@ -314,6 +314,8 @@ func (m *Migrator) loadEvents(eventRepo datastore.EventRepository, project *data
 		return err
 	}
 
+	fmt.Printf("Loaded %v events", len(events))
+
 	if len(events) > 0 {
 		err = m.SaveEvents(context.Background(), events)
 		if err != nil {
