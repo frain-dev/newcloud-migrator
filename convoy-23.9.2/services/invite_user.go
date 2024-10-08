@@ -1,0 +1,99 @@
+package services
+
+import (
+	"context"
+	"fmt"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/pkg/msgpack"
+	"strings"
+	"time"
+
+	"github.com/dchest/uniuri"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/auth"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/config"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/internal/email"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/pkg/log"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/queue"
+	"github.com/oklog/ulid/v2"
+)
+
+type InviteUserService struct {
+	Queue      queue.Queuer
+	InviteRepo datastore.OrganisationInviteRepository
+
+	InviteeEmail string
+	Role         auth.Role
+	User         *datastore.User
+	Organisation *datastore.Organisation
+}
+
+func (iu *InviteUserService) Run(ctx context.Context) (*datastore.OrganisationInvite, error) {
+	iv := &datastore.OrganisationInvite{
+		UID:            ulid.Make().String(),
+		OrganisationID: iu.Organisation.UID,
+		InviteeEmail:   iu.InviteeEmail,
+		Token:          uniuri.NewLen(64),
+		Role:           iu.Role,
+		Status:         datastore.InviteStatusPending,
+		ExpiresAt:      time.Now().Add(time.Hour * 24 * 14), // expires in 2 weeks.
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
+	}
+
+	err := iu.InviteRepo.CreateOrganisationInvite(ctx, iv)
+	if err != nil {
+		errMsg := "failed to invite member"
+		log.FromContext(ctx).WithError(err).Error(errMsg)
+
+		if strings.Contains(err.Error(), "duplicate") && strings.Contains(err.Error(), "organisation_invites_invitee_email") {
+			return nil, &ServiceError{ErrMsg: "an invite for this email already exists", Err: err}
+		}
+
+		return nil, &ServiceError{ErrMsg: errMsg, Err: err}
+	}
+
+	err = sendInviteEmail(ctx, iv, iu.User, iu.Organisation, iu.Queue)
+	if err != nil {
+		log.FromContext(ctx).WithError(err).Error("failed to send email invite")
+	}
+
+	return iv, nil
+}
+
+func sendInviteEmail(_ context.Context, iv *datastore.OrganisationInvite, user *datastore.User, org *datastore.Organisation, queuer queue.Queuer) error {
+	cfg, err := config.Get()
+	if err != nil {
+		return err
+	}
+
+	baseURL := cfg.Host
+	em := email.Message{
+		Email:        iv.InviteeEmail,
+		Subject:      "Convoy Organization Invite",
+		TemplateName: email.TemplateOrganisationInvite,
+		Params: map[string]string{
+			"invite_url":        fmt.Sprintf("%s/accept-invite?invite-token=%s", baseURL, iv.Token),
+			"organisation_name": org.Name,
+			"inviter_name":      fmt.Sprintf("%s %s", user.FirstName, user.LastName),
+			"expires_at":        iv.ExpiresAt.String(),
+		},
+	}
+
+	bytes, err := msgpack.EncodeMsgPack(em)
+	if err != nil {
+		return nil
+	}
+
+	job := &queue.Job{
+		Payload: bytes,
+		Delay:   0,
+	}
+
+	err = queuer.Write(convoy.EmailProcessor, convoy.DefaultQueue, job)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

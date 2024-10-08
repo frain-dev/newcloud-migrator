@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	ncache "github.com/frain-dev/convoy/cache/noop"
-	"github.com/frain-dev/convoy/database/postgres"
-	"github.com/frain-dev/convoy/datastore"
-	"github.com/frain-dev/convoy/util"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/postgres"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/util"
 )
 
 func (m *Migrator) RunSubscriptionMigration() error {
-	subRepo := postgres.NewSubscriptionRepo(m, ncache.NewNoopCache())
+	subRepo := postgres.NewSubscriptionRepo(m)
 	for _, p := range m.projects {
 		err := m.loadProjectSubscriptions(subRepo, p.UID, defaultPageable)
 		if err != nil {
@@ -45,7 +44,7 @@ const (
     `
 )
 
-func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datastore.Subscription) error {
+func (m *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datastore.Subscription) error {
 	values := make([]map[string]interface{}, 0)
 	for i := range subscriptions {
 		subscription := &subscriptions[i]
@@ -57,7 +56,7 @@ func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datast
 
 		var endpointID, sourceID, deviceID *string
 		if !util.IsStringEmpty(subscription.EndpointID) {
-			if _, ok := s.endpointIDs[subscription.EndpointID]; !ok {
+			if _, ok := m.endpointIDs[subscription.EndpointID]; !ok {
 				continue
 			}
 
@@ -65,7 +64,7 @@ func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datast
 		}
 
 		if !util.IsStringEmpty(subscription.SourceID) {
-			if _, ok := s.sourceIDs[subscription.SourceID]; !ok {
+			if _, ok := m.sourceIDs[subscription.SourceID]; !ok {
 				continue
 			}
 
@@ -102,7 +101,7 @@ func (s *Migrator) SaveSubscriptions(ctx context.Context, subscriptions []datast
 	}
 
 	if len(values) > 0 {
-		_, err := s.newDB.NamedExecContext(ctx, createSubscription, values)
+		_, err := m.newDB.NamedExecContext(ctx, createSubscription, values)
 		if err != nil {
 			return err
 		}

@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/frain-dev/convoy/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
 )
 
 func (m *Migrator) RunUserMigration() error {

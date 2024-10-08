@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	ncache "github.com/frain-dev/convoy/cache/noop"
-	"github.com/frain-dev/convoy/database/postgres"
-	"github.com/frain-dev/convoy/datastore"
-	newConvoyDatastore "github.com/frain-dev/newConvoy/datastore"
+	newConvoyDatastore "github.com/frain-dev/convoy/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/postgres"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -153,13 +152,11 @@ func transformEndpoints(endpoints []datastore.Endpoint) []newConvoyDatastore.End
 	return e
 }
 
-func (m *Migrator) loadProjectEndpoints(endpointRepo datastore.EndpointRepository, projectID string, pageable datastore.Pageable) ([]newConvoyDatastore.Endpoint, error) {
+func (m *Migrator) loadProjectEndpoints(endpointRepo datastore.EndpointRepository, projectID string, pageable datastore.Pageable) ([]datastore.Endpoint, error) {
 	endpoints, paginationData, err := endpointRepo.LoadEndpointsPaged(context.Background(), projectID, &datastore.Filter{}, pageable)
 	if err != nil {
 		return nil, err
 	}
-
-	transformedEndpoints := transformEndpoints(endpoints)
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = endpoints[len(endpoints)-1].UID
@@ -168,10 +165,10 @@ func (m *Migrator) loadProjectEndpoints(endpointRepo datastore.EndpointRepositor
 			log.WithError(err).Errorf("failed to load next members page, next cursor is %s", paginationData.NextPageCursor)
 		}
 
-		transformedEndpoints = append(transformedEndpoints, moreEndpoints...)
+		endpoints = append(endpoints, moreEndpoints...)
 	}
 
-	return transformedEndpoints, nil
+	return endpoints, nil
 }
 
 func (m *Migrator) addHeader(r *http.Request) {
@@ -288,7 +285,7 @@ func (m *Migrator) loadOrgMembers(orgMemberRepo datastore.OrganisationMemberRepo
 
 func (m *Migrator) loadUsers(userIDs map[string]struct{}) ([]*datastore.User, error) {
 	var users []*datastore.User
-	userRepo := postgres.NewUserRepo(m, ncache.NewNoopCache())
+	userRepo := postgres.NewUserRepo(m)
 
 	for userID := range userIDs {
 		user, err := userRepo.FindUserByID(context.Background(), userID)

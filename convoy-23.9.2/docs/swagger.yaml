@@ -1,0 +1,4627 @@
+basePath: /api
+definitions:
+  config.SignatureHeaderProvider:
+    enum:
+    - X-Convoy-Signature
+    type: string
+    x-enum-varnames:
+    - DefaultSignatureHeader
+  datastore.AlertConfiguration:
+    properties:
+      count:
+        type: integer
+      threshold:
+        type: string
+    type: object
+  datastore.ApiKey:
+    properties:
+      header_name:
+        type: string
+      header_value:
+        type: string
+    type: object
+  datastore.BasicAuth:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  datastore.CLIMetadata:
+    properties:
+      event_type:
+        type: string
+      source_id:
+        type: string
+    type: object
+  datastore.CustomResponse:
+    properties:
+      body:
+        type: string
+      content_type:
+        type: string
+    type: object
+  datastore.DeliveryAttempt:
+    properties:
+      api_version:
+        type: string
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      endpoint_id:
+        type: string
+      error:
+        type: string
+      http_status:
+        type: string
+      ip_address:
+        type: string
+      method:
+        type: string
+      msg_id:
+        type: string
+      request_http_header:
+        $ref: '#/definitions/datastore.HttpHeader'
+      response_data:
+        type: string
+      response_http_header:
+        $ref: '#/definitions/datastore.HttpHeader'
+      status:
+        type: boolean
+      uid:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  datastore.Device:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      endpoint_id:
+        type: string
+      host_name:
+        type: string
+      last_seen_at:
+        type: string
+      project_id:
+        type: string
+      status:
+        $ref: '#/definitions/datastore.DeviceStatus'
+      uid:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  datastore.DeviceStatus:
+    enum:
+    - offline
+    - online
+    - disabled
+    type: string
+    x-enum-varnames:
+    - DeviceStatusOffline
+    - DeviceStatusOnline
+    - DeviceStatusDisabled
+  datastore.EncodingType:
+    enum:
+    - base64
+    - hex
+    type: string
+    x-enum-varnames:
+    - Base64Encoding
+    - HexEncoding
+  datastore.Endpoint:
+    properties:
+      advanced_signatures:
+        type: boolean
+      authentication:
+        $ref: '#/definitions/datastore.EndpointAuthentication'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      events:
+        type: integer
+      http_timeout:
+        type: string
+      owner_id:
+        type: string
+      project_id:
+        type: string
+      rate_limit:
+        type: integer
+      rate_limit_duration:
+        type: string
+      secrets:
+        items:
+          $ref: '#/definitions/datastore.Secret'
+        type: array
+      slack_webhook_url:
+        type: string
+      status:
+        $ref: '#/definitions/datastore.EndpointStatus'
+      support_email:
+        type: string
+      target_url:
+        type: string
+      title:
+        type: string
+      uid:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  datastore.EndpointAuthentication:
+    properties:
+      api_key:
+        $ref: '#/definitions/datastore.ApiKey'
+      type:
+        $ref: '#/definitions/datastore.EndpointAuthenticationType'
+    type: object
+  datastore.EndpointAuthenticationType:
+    enum:
+    - api_key
+    type: string
+    x-enum-varnames:
+    - APIKeyAuthentication
+  datastore.EndpointStatus:
+    enum:
+    - active
+    - inactive
+    - pending
+    - paused
+    type: string
+    x-enum-varnames:
+    - ActiveEndpointStatus
+    - InactiveEndpointStatus
+    - PendingEndpointStatus
+    - PausedEndpointStatus
+  datastore.Event:
+    properties:
+      app_id:
+        description: Deprecated
+        type: string
+      created_at:
+        type: string
+      data:
+        description: |-
+          Data is an arbitrary JSON value that gets sent as the body of the
+          webhook to the endpoints
+        items:
+          type: integer
+        type: array
+      deleted_at:
+        type: string
+      endpoint_metadata:
+        items:
+          $ref: '#/definitions/datastore.Endpoint'
+        type: array
+      endpoints:
+        items:
+          type: string
+        type: array
+      event_type:
+        type: string
+      headers:
+        $ref: '#/definitions/httpheader.HTTPHeader'
+      idempotency_key:
+        type: string
+      is_duplicate_event:
+        type: boolean
+      project_id:
+        type: string
+      raw:
+        type: string
+      source_id:
+        type: string
+      source_metadata:
+        $ref: '#/definitions/datastore.Source'
+      uid:
+        type: string
+      updated_at:
+        type: string
+      url_query_params:
+        type: string
+    type: object
+  datastore.EventDeliveryStatus:
+    enum:
+    - Scheduled
+    - Processing
+    - Discarded
+    - Failure
+    - Success
+    - Retry
+    type: string
+    x-enum-varnames:
+    - ScheduledEventStatus
+    - ProcessingEventStatus
+    - DiscardedEventStatus
+    - FailureEventStatus
+    - SuccessEventStatus
+    - RetryEventStatus
+  datastore.FilterConfiguration:
+    properties:
+      event_types:
+        items:
+          type: string
+        type: array
+      filter:
+        $ref: '#/definitions/datastore.FilterSchema'
+    type: object
+  datastore.FilterSchema:
+    properties:
+      body:
+        $ref: '#/definitions/datastore.M'
+      headers:
+        $ref: '#/definitions/datastore.M'
+    type: object
+  datastore.GooglePubSubConfig:
+    properties:
+      project_id:
+        type: string
+      service_account:
+        items:
+          type: integer
+        type: array
+      subscription_id:
+        type: string
+    type: object
+  datastore.HMac:
+    properties:
+      encoding:
+        $ref: '#/definitions/datastore.EncodingType'
+      hash:
+        type: string
+      header:
+        type: string
+      secret:
+        type: string
+    type: object
+  datastore.HttpHeader:
+    additionalProperties:
+      type: string
+    type: object
+  datastore.KeyType:
+    enum:
+    - project
+    - app_portal
+    - cli
+    - personal_key
+    type: string
+    x-enum-varnames:
+    - ProjectKey
+    - AppPortalKey
+    - CLIKey
+    - PersonalKey
+  datastore.M:
+    additionalProperties: true
+    type: object
+  datastore.MetaEventAttempt:
+    properties:
+      request_http_header:
+        $ref: '#/definitions/datastore.HttpHeader'
+      response_data:
+        type: string
+      response_http_header:
+        $ref: '#/definitions/datastore.HttpHeader'
+    type: object
+  datastore.MetaEventConfiguration:
+    properties:
+      event_type:
+        items:
+          type: string
+        type: array
+      is_enabled:
+        type: boolean
+      pub_sub:
+        $ref: '#/definitions/datastore.PubSubConfig'
+      secret:
+        type: string
+      type:
+        $ref: '#/definitions/datastore.MetaEventType'
+      url:
+        type: string
+    type: object
+  datastore.MetaEventType:
+    enum:
+    - http
+    - pub_sub
+    type: string
+    x-enum-varnames:
+    - HTTPMetaEvent
+    - PubSubMetaEvent
+  datastore.Metadata:
+    properties:
+      data:
+        description: Data to be sent to endpoint.
+        items:
+          type: integer
+        type: array
+      interval_seconds:
+        type: integer
+      next_send_time:
+        type: string
+      num_trials:
+        description: |-
+          NumTrials: number of times we have tried to deliver this Event to
+          an application
+        type: integer
+      raw:
+        type: string
+      retry_limit:
+        type: integer
+      strategy:
+        $ref: '#/definitions/datastore.StrategyProvider'
+    type: object
+  datastore.PageDirection:
+    enum:
+    - next
+    - prev
+    type: string
+    x-enum-varnames:
+    - Next
+    - Prev
+  datastore.Pageable:
+    properties:
+      direction:
+        $ref: '#/definitions/datastore.PageDirection'
+      next_page_cursor:
+        type: string
+      per_page:
+        type: integer
+      prev_page_cursor:
+        type: string
+    type: object
+  datastore.PaginationData:
+    properties:
+      has_next_page:
+        type: boolean
+      has_prev_page:
+        type: boolean
+      next_page_cursor:
+        type: string
+      per_page:
+        type: integer
+      prev_page_cursor:
+        type: string
+    type: object
+  datastore.Project:
+    properties:
+      config:
+        $ref: '#/definitions/datastore.ProjectConfig'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      logo_url:
+        type: string
+      name:
+        type: string
+      organisation_id:
+        type: string
+      retained_events:
+        type: integer
+      statistics:
+        $ref: '#/definitions/datastore.ProjectStatistics'
+      type:
+        $ref: '#/definitions/datastore.ProjectType'
+      uid:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  datastore.ProjectConfig:
+    properties:
+      disable_endpoint:
+        type: boolean
+      max_payload_read_size:
+        type: integer
+      meta_event:
+        $ref: '#/definitions/datastore.MetaEventConfiguration'
+      ratelimit:
+        $ref: '#/definitions/datastore.RateLimitConfiguration'
+      replay_attacks_prevention_enabled:
+        type: boolean
+      retention_policy:
+        $ref: '#/definitions/datastore.RetentionPolicyConfiguration'
+      retention_policy_enabled:
+        type: boolean
+      signature:
+        $ref: '#/definitions/datastore.SignatureConfiguration'
+      strategy:
+        $ref: '#/definitions/datastore.StrategyConfiguration'
+    type: object
+  datastore.ProjectStatistics:
+    properties:
+      messages_sent:
+        type: integer
+      total_endpoints:
+        type: integer
+      total_sources:
+        type: integer
+      total_subscriptions:
+        type: integer
+    type: object
+  datastore.ProjectType:
+    enum:
+    - outgoing
+    - incoming
+    type: string
+    x-enum-varnames:
+    - OutgoingProject
+    - IncomingProject
+  datastore.ProviderConfig:
+    properties:
+      twitter:
+        $ref: '#/definitions/datastore.TwitterProviderConfig'
+    type: object
+  datastore.PubSubConfig:
+    properties:
+      google:
+        $ref: '#/definitions/datastore.GooglePubSubConfig'
+      sqs:
+        $ref: '#/definitions/datastore.SQSPubSubConfig'
+      type:
+        $ref: '#/definitions/datastore.PubSubType'
+      workers:
+        type: integer
+    type: object
+  datastore.PubSubType:
+    enum:
+    - sqs
+    - google
+    type: string
+    x-enum-varnames:
+    - SqsPubSub
+    - GooglePubSub
+  datastore.RateLimitConfiguration:
+    properties:
+      count:
+        type: integer
+      duration:
+        type: integer
+    type: object
+  datastore.RetentionPolicyConfiguration:
+    properties:
+      policy:
+        type: string
+    type: object
+  datastore.RetryConfiguration:
+    properties:
+      duration:
+        type: integer
+      retry_count:
+        type: integer
+      type:
+        $ref: '#/definitions/datastore.StrategyProvider'
+    type: object
+  datastore.SQSPubSubConfig:
+    properties:
+      access_key_id:
+        type: string
+      default_region:
+        type: string
+      queue_name:
+        type: string
+      secret_key:
+        type: string
+    type: object
+  datastore.SearchParams:
+    properties:
+      created_at_end:
+        type: integer
+      created_at_start:
+        type: integer
+    type: object
+  datastore.Secret:
+    properties:
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      expires_at:
+        type: string
+      uid:
+        type: string
+      updated_at:
+        type: string
+      value:
+        type: string
+    type: object
+  datastore.SignatureConfiguration:
+    properties:
+      header:
+        $ref: '#/definitions/config.SignatureHeaderProvider'
+      versions:
+        items:
+          $ref: '#/definitions/datastore.SignatureVersion'
+        type: array
+    type: object
+  datastore.SignatureVersion:
+    properties:
+      created_at:
+        type: string
+      encoding:
+        $ref: '#/definitions/datastore.EncodingType'
+      hash:
+        type: string
+      uid:
+        type: string
+    type: object
+  datastore.Source:
+    properties:
+      created_at:
+        type: string
+      custom_response:
+        $ref: '#/definitions/datastore.CustomResponse'
+      deleted_at:
+        type: string
+      forward_headers:
+        items:
+          type: string
+        type: array
+      idempotency_keys:
+        items:
+          type: string
+        type: array
+      is_disabled:
+        type: boolean
+      mask_id:
+        type: string
+      name:
+        type: string
+      project_id:
+        type: string
+      provider:
+        $ref: '#/definitions/datastore.SourceProvider'
+      provider_config:
+        $ref: '#/definitions/datastore.ProviderConfig'
+      pub_sub:
+        $ref: '#/definitions/datastore.PubSubConfig'
+      type:
+        $ref: '#/definitions/datastore.SourceType'
+      uid:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+      verifier:
+        $ref: '#/definitions/datastore.VerifierConfig'
+    type: object
+  datastore.SourceProvider:
+    enum:
+    - github
+    - twitter
+    - shopify
+    type: string
+    x-enum-varnames:
+    - GithubSourceProvider
+    - TwitterSourceProvider
+    - ShopifySourceProvider
+  datastore.SourceType:
+    enum:
+    - http
+    - rest_api
+    - pub_sub
+    - db_change_stream
+    type: string
+    x-enum-varnames:
+    - HTTPSource
+    - RestApiSource
+    - PubSubSource
+    - DBChangeStream
+  datastore.StrategyConfiguration:
+    properties:
+      duration:
+        type: integer
+      retry_count:
+        type: integer
+      type:
+        $ref: '#/definitions/datastore.StrategyProvider'
+    type: object
+  datastore.StrategyProvider:
+    enum:
+    - linear
+    - linear
+    - exponential
+    type: string
+    x-enum-varnames:
+    - DefaultStrategyProvider
+    - LinearStrategyProvider
+    - ExponentialStrategyProvider
+  datastore.SubscriptionType:
+    enum:
+    - cli
+    - api
+    type: string
+    x-enum-varnames:
+    - SubscriptionTypeCLI
+    - SubscriptionTypeAPI
+  datastore.TwitterProviderConfig:
+    properties:
+      crc_verified_at:
+        type: string
+    type: object
+  datastore.VerifierConfig:
+    properties:
+      api_key:
+        $ref: '#/definitions/datastore.ApiKey'
+      basic_auth:
+        $ref: '#/definitions/datastore.BasicAuth'
+      hmac:
+        $ref: '#/definitions/datastore.HMac'
+      type:
+        $ref: '#/definitions/datastore.VerifierType'
+    type: object
+  datastore.VerifierType:
+    enum:
+    - noop
+    - hmac
+    - basic_auth
+    - api_key
+    type: string
+    x-enum-varnames:
+    - NoopVerifier
+    - HMacVerifier
+    - BasicAuthVerifier
+    - APIKeyVerifier
+  httpheader.HTTPHeader:
+    additionalProperties:
+      items:
+        type: string
+      type: array
+    type: object
+  models.APIKeyResponse:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      key:
+        type: string
+      key_type:
+        $ref: '#/definitions/datastore.KeyType'
+      name:
+        type: string
+      role:
+        $ref: '#/definitions/models.Role'
+      uid:
+        type: string
+      user_id:
+        type: string
+    type: object
+  models.AlertConfiguration:
+    properties:
+      count:
+        type: integer
+      threshold:
+        type: string
+    type: object
+  models.ApiKey:
+    properties:
+      header_name:
+        type: string
+      header_value:
+        type: string
+    type: object
+  models.BasicAuth:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  models.CreateEndpoint:
+    properties:
+      advanced_signatures:
+        type: boolean
+      appID:
+        description: Deprecated but necessary for backward compatibility
+        type: string
+      authentication:
+        $ref: '#/definitions/models.EndpointAuthentication'
+      description:
+        type: string
+      http_timeout:
+        type: string
+      is_disabled:
+        type: boolean
+      name:
+        type: string
+      owner_id:
+        type: string
+      rate_limit:
+        type: integer
+      rate_limit_duration:
+        type: string
+      secret:
+        type: string
+      slack_webhook_url:
+        type: string
+      support_email:
+        type: string
+      url:
+        type: string
+    type: object
+  models.CreateEvent:
+    properties:
+      app_id:
+        description: Deprecated but necessary for backward compatibility
+        type: string
+      custom_headers:
+        additionalProperties:
+          type: string
+        type: object
+      data:
+        description: |-
+          Data is an arbitrary JSON value that gets sent as the body of the
+          webhook to the endpoints
+        items:
+          type: integer
+        type: array
+      endpoint_id:
+        type: string
+      event_type:
+        type: string
+      idempotency_key:
+        type: string
+    type: object
+  models.CreateProject:
+    properties:
+      config:
+        $ref: '#/definitions/models.ProjectConfig'
+      logo_url:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  models.CreateProjectResponse:
+    properties:
+      api_key:
+        $ref: '#/definitions/models.APIKeyResponse'
+      project:
+        $ref: '#/definitions/models.ProjectResponse'
+    type: object
+  models.CreateSource:
+    properties:
+      custom_response:
+        $ref: '#/definitions/models.CustomResponse'
+      idempotency_keys:
+        items:
+          type: string
+        type: array
+      idempotency_ttl:
+        type: string
+      is_disabled:
+        type: boolean
+      name:
+        type: string
+      provider:
+        $ref: '#/definitions/datastore.SourceProvider'
+      pub_sub:
+        $ref: '#/definitions/models.PubSubConfig'
+      type:
+        $ref: '#/definitions/datastore.SourceType'
+      verifier:
+        $ref: '#/definitions/models.VerifierConfig'
+    type: object
+  models.CreateSubscription:
+    properties:
+      alert_config:
+        $ref: '#/definitions/models.AlertConfiguration'
+      app_id:
+        description: Deprecated but necessary for backward compatibility
+        type: string
+      endpoint_id:
+        type: string
+      filter_config:
+        $ref: '#/definitions/models.FilterConfiguration'
+      name:
+        type: string
+      rate_limit_config:
+        $ref: '#/definitions/models.RateLimitConfiguration'
+      retry_config:
+        $ref: '#/definitions/models.RetryConfiguration'
+      source_id:
+        type: string
+    type: object
+  models.CustomResponse:
+    properties:
+      body:
+        type: string
+      content_type:
+        type: string
+    type: object
+  models.DynamicEndpoint:
+    properties:
+      advanced_signatures:
+        type: boolean
+      appID:
+        description: Deprecated but necessary for backward compatibility
+        type: string
+      authentication:
+        $ref: '#/definitions/models.EndpointAuthentication'
+      description:
+        type: string
+      http_timeout:
+        type: string
+      is_disabled:
+        type: boolean
+      name:
+        type: string
+      owner_id:
+        type: string
+      rate_limit:
+        type: integer
+      rate_limit_duration:
+        type: string
+      secret:
+        type: string
+      slack_webhook_url:
+        type: string
+      support_email:
+        type: string
+      url:
+        type: string
+    type: object
+  models.DynamicEvent:
+    properties:
+      endpoint:
+        $ref: '#/definitions/models.DynamicEndpoint'
+      event:
+        $ref: '#/definitions/models.DynamicEventStub'
+      subscription:
+        $ref: '#/definitions/models.DynamicSubscription'
+    type: object
+  models.DynamicEventStub:
+    properties:
+      custom_headers:
+        additionalProperties:
+          type: string
+        type: object
+      data:
+        description: Data is an arbitrary JSON value that gets sent as the body of
+          the webhook to the endpoints
+        items:
+          type: integer
+        type: array
+      event_type:
+        type: string
+      idempotency_key:
+        type: string
+      project_id:
+        type: string
+    type: object
+  models.DynamicSubscription:
+    properties:
+      alert_config:
+        $ref: '#/definitions/models.AlertConfiguration'
+      filter_config:
+        $ref: '#/definitions/models.FilterConfiguration'
+      name:
+        type: string
+      rate_limit_config:
+        $ref: '#/definitions/models.RateLimitConfiguration'
+      retry_config:
+        $ref: '#/definitions/models.RetryConfiguration'
+    type: object
+  models.EndpointAuthentication:
+    properties:
+      api_key:
+        $ref: '#/definitions/models.ApiKey'
+      type:
+        $ref: '#/definitions/datastore.EndpointAuthenticationType'
+    type: object
+  models.EndpointResponse:
+    properties:
+      advanced_signatures:
+        type: boolean
+      authentication:
+        $ref: '#/definitions/datastore.EndpointAuthentication'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      events:
+        type: integer
+      http_timeout:
+        type: string
+      owner_id:
+        type: string
+      project_id:
+        type: string
+      rate_limit:
+        type: integer
+      rate_limit_duration:
+        type: string
+      secrets:
+        items:
+          $ref: '#/definitions/datastore.Secret'
+        type: array
+      slack_webhook_url:
+        type: string
+      status:
+        $ref: '#/definitions/datastore.EndpointStatus'
+      support_email:
+        type: string
+      target_url:
+        type: string
+      title:
+        type: string
+      uid:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.EventDeliveryResponse:
+    properties:
+      cli_metadata:
+        $ref: '#/definitions/datastore.CLIMetadata'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      device_id:
+        type: string
+      device_metadata:
+        $ref: '#/definitions/datastore.Device'
+      endpoint_id:
+        type: string
+      endpoint_metadata:
+        $ref: '#/definitions/datastore.Endpoint'
+      event_id:
+        type: string
+      event_metadata:
+        $ref: '#/definitions/datastore.Event'
+      headers:
+        $ref: '#/definitions/httpheader.HTTPHeader'
+      idempotency_key:
+        type: string
+      metadata:
+        $ref: '#/definitions/datastore.Metadata'
+      project_id:
+        type: string
+      source_metadata:
+        $ref: '#/definitions/datastore.Source'
+      status:
+        $ref: '#/definitions/datastore.EventDeliveryStatus'
+      subscription_id:
+        type: string
+      uid:
+        type: string
+      updated_at:
+        type: string
+      url_query_params:
+        type: string
+    type: object
+  models.EventResponse:
+    properties:
+      app_id:
+        description: Deprecated
+        type: string
+      created_at:
+        type: string
+      data:
+        description: |-
+          Data is an arbitrary JSON value that gets sent as the body of the
+          webhook to the endpoints
+        items:
+          type: integer
+        type: array
+      deleted_at:
+        type: string
+      endpoint_metadata:
+        items:
+          $ref: '#/definitions/datastore.Endpoint'
+        type: array
+      endpoints:
+        items:
+          type: string
+        type: array
+      event_type:
+        type: string
+      headers:
+        $ref: '#/definitions/httpheader.HTTPHeader'
+      idempotency_key:
+        type: string
+      is_duplicate_event:
+        type: boolean
+      project_id:
+        type: string
+      raw:
+        type: string
+      source_id:
+        type: string
+      source_metadata:
+        $ref: '#/definitions/datastore.Source'
+      uid:
+        type: string
+      updated_at:
+        type: string
+      url_query_params:
+        type: string
+    type: object
+  models.ExpireSecret:
+    properties:
+      expiration:
+        type: integer
+      secret:
+        type: string
+    type: object
+  models.FS:
+    properties:
+      body:
+        $ref: '#/definitions/datastore.M'
+      headers:
+        $ref: '#/definitions/datastore.M'
+    type: object
+  models.FanoutEvent:
+    properties:
+      custom_headers:
+        additionalProperties:
+          type: string
+        type: object
+      data:
+        description: |-
+          Data is an arbitrary JSON value that gets sent as the body of the
+          webhook to the endpoints
+        items:
+          type: integer
+        type: array
+      event_type:
+        type: string
+      idempotency_key:
+        type: string
+      owner_id:
+        type: string
+    type: object
+  models.FilterConfiguration:
+    properties:
+      event_types:
+        items:
+          type: string
+        type: array
+      filter:
+        $ref: '#/definitions/models.FS'
+    type: object
+  models.FilterSchema:
+    properties:
+      body: {}
+      header: {}
+    type: object
+  models.GooglePubSubConfig:
+    properties:
+      project_id:
+        type: string
+      service_account:
+        items:
+          type: integer
+        type: array
+      subscription_id:
+        type: string
+    type: object
+  models.HMac:
+    properties:
+      encoding:
+        $ref: '#/definitions/datastore.EncodingType'
+      hash:
+        type: string
+      header:
+        type: string
+      secret:
+        type: string
+    type: object
+  models.IDs:
+    properties:
+      ids:
+        items:
+          type: string
+        type: array
+    type: object
+  models.MetaEventConfiguration:
+    properties:
+      event_type:
+        items:
+          type: string
+        type: array
+      is_enabled:
+        type: boolean
+      secret:
+        type: string
+      type:
+        type: string
+      url:
+        type: string
+    type: object
+  models.MetaEventResponse:
+    properties:
+      attempt:
+        $ref: '#/definitions/datastore.MetaEventAttempt'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      event_type:
+        type: string
+      metadata:
+        $ref: '#/definitions/datastore.Metadata'
+      project_id:
+        type: string
+      status:
+        $ref: '#/definitions/datastore.EventDeliveryStatus'
+      uid:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.PortalLink:
+    properties:
+      can_manage_endpoint:
+        type: boolean
+      endpoints:
+        items:
+          type: string
+        type: array
+      name:
+        type: string
+      owner_id:
+        type: string
+    type: object
+  models.PortalLinkResponse:
+    properties:
+      can_manage_endpoint:
+        type: boolean
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      endpoint_count:
+        type: integer
+      endpoints:
+        items:
+          type: string
+        type: array
+      endpoints_metadata:
+        items:
+          $ref: '#/definitions/datastore.Endpoint'
+        type: array
+      name:
+        type: string
+      owner_id:
+        type: string
+      project_id:
+        type: string
+      token:
+        type: string
+      uid:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  models.ProjectConfig:
+    properties:
+      disable_endpoint:
+        type: boolean
+      max_payload_read_size:
+        type: integer
+      meta_event:
+        $ref: '#/definitions/models.MetaEventConfiguration'
+      ratelimit:
+        $ref: '#/definitions/models.RateLimitConfiguration'
+      replay_attacks_prevention_enabled:
+        type: boolean
+      retention_policy:
+        $ref: '#/definitions/models.RetentionPolicyConfiguration'
+      retention_policy_enabled:
+        type: boolean
+      signature:
+        $ref: '#/definitions/models.SignatureConfiguration'
+      strategy:
+        $ref: '#/definitions/models.StrategyConfiguration'
+    type: object
+  models.ProjectResponse:
+    properties:
+      config:
+        $ref: '#/definitions/datastore.ProjectConfig'
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      logo_url:
+        type: string
+      name:
+        type: string
+      organisation_id:
+        type: string
+      retained_events:
+        type: integer
+      statistics:
+        $ref: '#/definitions/datastore.ProjectStatistics'
+      type:
+        $ref: '#/definitions/datastore.ProjectType'
+      uid:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.PubSubConfig:
+    properties:
+      google:
+        $ref: '#/definitions/models.GooglePubSubConfig'
+      sqs:
+        $ref: '#/definitions/models.SQSPubSubConfig'
+      type:
+        $ref: '#/definitions/datastore.PubSubType'
+      workers:
+        type: integer
+    type: object
+  models.RateLimitConfiguration:
+    properties:
+      count:
+        type: integer
+      duration:
+        type: integer
+    type: object
+  models.RetentionPolicyConfiguration:
+    properties:
+      policy:
+        type: string
+    type: object
+  models.RetryConfiguration:
+    properties:
+      duration:
+        type: string
+      interval_seconds:
+        type: integer
+      retry_count:
+        type: integer
+      type:
+        $ref: '#/definitions/datastore.StrategyProvider'
+    type: object
+  models.Role:
+    properties:
+      app:
+        type: string
+      project:
+        type: string
+      type:
+        type: string
+    type: object
+  models.SQSPubSubConfig:
+    properties:
+      access_key_id:
+        type: string
+      default_region:
+        type: string
+      queue_name:
+        type: string
+      secret_key:
+        type: string
+    type: object
+  models.SignatureConfiguration:
+    properties:
+      header:
+        $ref: '#/definitions/config.SignatureHeaderProvider'
+      versions:
+        items:
+          $ref: '#/definitions/models.SignatureVersion'
+        type: array
+    type: object
+  models.SignatureVersion:
+    properties:
+      created_at:
+        type: string
+      encoding:
+        type: string
+      hash:
+        type: string
+      uid:
+        type: string
+    type: object
+  models.SourceResponse:
+    properties:
+      created_at:
+        type: string
+      custom_response:
+        $ref: '#/definitions/datastore.CustomResponse'
+      deleted_at:
+        type: string
+      forward_headers:
+        items:
+          type: string
+        type: array
+      idempotency_keys:
+        items:
+          type: string
+        type: array
+      is_disabled:
+        type: boolean
+      mask_id:
+        type: string
+      name:
+        type: string
+      project_id:
+        type: string
+      provider:
+        $ref: '#/definitions/datastore.SourceProvider'
+      provider_config:
+        $ref: '#/definitions/datastore.ProviderConfig'
+      pub_sub:
+        $ref: '#/definitions/datastore.PubSubConfig'
+      type:
+        $ref: '#/definitions/datastore.SourceType'
+      uid:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+      verifier:
+        $ref: '#/definitions/datastore.VerifierConfig'
+    type: object
+  models.StrategyConfiguration:
+    properties:
+      duration:
+        type: integer
+      retry_count:
+        type: integer
+      type:
+        type: string
+    type: object
+  models.SubscriptionResponse:
+    properties:
+      alert_config:
+        allOf:
+        - $ref: '#/definitions/datastore.AlertConfiguration'
+        description: subscription config
+      created_at:
+        type: string
+      deleted_at:
+        type: string
+      device_metadata:
+        $ref: '#/definitions/datastore.Device'
+      endpoint_metadata:
+        $ref: '#/definitions/datastore.Endpoint'
+      filter_config:
+        $ref: '#/definitions/datastore.FilterConfiguration'
+      name:
+        type: string
+      rate_limit_config:
+        $ref: '#/definitions/datastore.RateLimitConfiguration'
+      retry_config:
+        $ref: '#/definitions/datastore.RetryConfiguration'
+      source_metadata:
+        $ref: '#/definitions/datastore.Source'
+      type:
+        $ref: '#/definitions/datastore.SubscriptionType'
+      uid:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.TestFilter:
+    properties:
+      request:
+        $ref: '#/definitions/models.FilterSchema'
+      schema:
+        $ref: '#/definitions/models.FilterSchema'
+    type: object
+  models.UpdateCustomResponse:
+    properties:
+      body:
+        type: string
+      content_type:
+        type: string
+    type: object
+  models.UpdateEndpoint:
+    properties:
+      advanced_signatures:
+        type: boolean
+      authentication:
+        $ref: '#/definitions/models.EndpointAuthentication'
+      description:
+        type: string
+      http_timeout:
+        type: string
+      is_disabled:
+        type: boolean
+      name:
+        type: string
+      owner_id:
+        type: string
+      rate_limit:
+        type: integer
+      rate_limit_duration:
+        type: string
+      secret:
+        type: string
+      slack_webhook_url:
+        type: string
+      support_email:
+        type: string
+      url:
+        type: string
+    type: object
+  models.UpdateProject:
+    properties:
+      config:
+        $ref: '#/definitions/models.ProjectConfig'
+      logo_url:
+        type: string
+      name:
+        type: string
+      rate_limit:
+        type: integer
+      rate_limit_duration:
+        type: string
+    type: object
+  models.UpdateSource:
+    properties:
+      custom_response:
+        $ref: '#/definitions/models.UpdateCustomResponse'
+      forward_headers:
+        items:
+          type: string
+        type: array
+      idempotency_keys:
+        items:
+          type: string
+        type: array
+      idempotency_ttl:
+        type: string
+      is_disabled:
+        type: boolean
+      name:
+        type: string
+      pub_sub:
+        $ref: '#/definitions/models.PubSubConfig'
+      type:
+        $ref: '#/definitions/datastore.SourceType'
+      verifier:
+        $ref: '#/definitions/models.VerifierConfig'
+    type: object
+  models.UpdateSubscription:
+    properties:
+      alert_config:
+        $ref: '#/definitions/models.AlertConfiguration'
+      app_id:
+        type: string
+      endpoint_id:
+        type: string
+      filter_config:
+        $ref: '#/definitions/models.FilterConfiguration'
+      name:
+        type: string
+      rate_limit_config:
+        $ref: '#/definitions/models.RateLimitConfiguration'
+      retry_config:
+        $ref: '#/definitions/models.RetryConfiguration'
+      source_id:
+        type: string
+    type: object
+  models.VerifierConfig:
+    properties:
+      api_key:
+        $ref: '#/definitions/models.ApiKey'
+      basic_auth:
+        $ref: '#/definitions/models.BasicAuth'
+      hmac:
+        $ref: '#/definitions/models.HMac'
+      type:
+        $ref: '#/definitions/datastore.VerifierType'
+    type: object
+  public.Stub:
+    type: object
+  public.pagedResponse:
+    properties:
+      content: {}
+      pagination:
+        $ref: '#/definitions/datastore.PaginationData'
+    type: object
+  util.ServerResponse:
+    properties:
+      data:
+        items:
+          type: integer
+        type: array
+      message:
+        type: string
+      status:
+        type: boolean
+    type: object
+host: dashboard.getconvoy.io
+info:
+  contact:
+    email: support@getconvoy.io
+    name: Convoy Support
+    url: https://getconvoy.io/docs
+  description: Convoy is a fast and secure webhooks proxy. This document contains
+    datastore.s API specification.
+  license:
+    name: Mozilla Public License 2.0
+    url: https://www.mozilla.org/en-US/MPL/2.0/
+  termsOfService: https://getconvoy.io/terms
+  title: Convoy API Reference
+  version: 0.9.0
+paths:
+  /v1/projects:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches projects
+      parameters:
+      - description: Project name
+        in: query
+        name: name
+        type: string
+      - description: organisation id
+        in: query
+        name: orgID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.ProjectResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all projects
+      tags:
+      - Projects
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a project
+      parameters:
+      - description: Organisation id
+        in: query
+        name: orgID
+        required: true
+        type: string
+      - description: Project Details
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateProject'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.CreateProjectResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a project
+      tags:
+      - Projects
+  /v1/projects/{projectID}:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes a project using its id
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a project
+      tags:
+      - Projects
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches a project by its id
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ProjectResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve a project
+      tags:
+      - Projects
+    put:
+      consumes:
+      - application/json
+      description: This endpoint updates a project
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Project Details
+        in: body
+        name: project
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateProject'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.ProjectResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a project
+      tags:
+      - Projects
+  /v1/projects/{projectID}/endpoints:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches an endpoints
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: A pagination cursor to fetch the next page of a list
+        example: 01H0JA5MEES38RRK3HTEJC647K
+        in: query
+        name: next_page_cursor
+        type: string
+      - description: The owner ID of the endpoint
+        example: 01H0JA5MEES38RRK3HTEJC647K
+        in: query
+        name: ownerId
+        type: string
+      - description: The number of items to return per page
+        example: 20
+        in: query
+        name: perPage
+        type: integer
+      - description: A pagination cursor to fetch the previous page of a list
+        example: 01H0JATTVCXZK8FRDX1M1JN3QY
+        in: query
+        name: prev_page_cursor
+        type: string
+      - description: The name of the endpoint
+        example: endpoint-1
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/public.pagedResponse'
+                  - properties:
+                      content:
+                        items:
+                          $ref: '#/definitions/models.EndpointResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all endpoints
+      tags:
+      - Endpoints
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates an endpoint
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Endpoint Details
+        in: body
+        name: endpoint
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateEndpoint'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EndpointResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create an endpoint
+      tags:
+      - Endpoints
+  /v1/projects/{projectID}/endpoints/{endpointID}:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes an endpoint
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: endpointID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete endpoint
+      tags:
+      - Endpoints
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches an endpoint
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: endpointID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EndpointResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve endpoint
+      tags:
+      - Endpoints
+    put:
+      consumes:
+      - application/json
+      description: This endpoint updates an endpoint
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: endpointID
+        required: true
+        type: string
+      - description: Endpoint Details
+        in: body
+        name: endpoint
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateEndpoint'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EndpointResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update an endpoint
+      tags:
+      - Endpoints
+  /v1/projects/{projectID}/endpoints/{endpointID}/expire_secret:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint expires and re-generates the endpoint secret.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: endpointID
+        required: true
+        type: string
+      - description: Expire Secret Body Parameters
+        in: body
+        name: endpoint
+        required: true
+        schema:
+          $ref: '#/definitions/models.ExpireSecret'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EndpointResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Roll endpoint secret
+      tags:
+      - Endpoints
+  /v1/projects/{projectID}/endpoints/{endpointID}/pause:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint toggles an endpoint status between the active and
+        paused states
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: endpointID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EndpointResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Pause endpoint
+      tags:
+      - Endpoints
+  /v1/projects/{projectID}/endpoints/{endpointID}/toggle_status:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint toggles an endpoint status between the active and
+        inactive statetes
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Endpoint ID
+        in: path
+        name: endpointID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EndpointResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Toggle endpoint status
+      tags:
+      - Endpoints
+  /v1/projects/{projectID}/eventdeliveries:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves all event deliveries paginated.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: The end date
+        example: 2008-05-02T15:04:05
+        in: query
+        name: endDate
+        type: string
+      - description: A list of endpoint IDs to filter by
+        in: query
+        items:
+          type: string
+        name: endpointId
+        type: array
+      - in: query
+        name: eventId
+        type: string
+      - in: query
+        name: idempotencyKey
+        type: string
+      - description: A pagination cursor to fetch the next page of a list
+        example: 01H0JA5MEES38RRK3HTEJC647K
+        in: query
+        name: next_page_cursor
+        type: string
+      - description: The number of items to return per page
+        example: 20
+        in: query
+        name: perPage
+        type: integer
+      - description: A pagination cursor to fetch the previous page of a list
+        example: 01H0JATTVCXZK8FRDX1M1JN3QY
+        in: query
+        name: prev_page_cursor
+        type: string
+      - description: The start date
+        example: 2006-01-02T15:04:05
+        in: query
+        name: startDate
+        type: string
+      - description: A list of event delivery statuses to filter by
+        in: query
+        items:
+          type: string
+        name: status
+        type: array
+      - in: query
+        name: subscriptionId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/public.pagedResponse'
+                  - properties:
+                      content:
+                        items:
+                          $ref: '#/definitions/models.EventDeliveryResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all event deliveries
+      tags:
+      - Event Deliveries
+  /v1/projects/{projectID}/eventdeliveries/{eventDeliveryID}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches an event delivery.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: event delivery id
+        in: path
+        name: eventDeliveryID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EventDeliveryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve an event delivery
+      tags:
+      - Event Deliveries
+  /v1/projects/{projectID}/eventdeliveries/{eventDeliveryID}/deliveryattempts:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches an app message's delivery attempts
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: event delivery id
+        in: path
+        name: eventDeliveryID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/datastore.DeliveryAttempt'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List delivery attempts
+      tags:
+      - Delivery Attempts
+  /v1/projects/{projectID}/eventdeliveries/{eventDeliveryID}/deliveryattempts/{deliveryAttemptID}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches an app event delivery attempt
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: event delivery id
+        in: path
+        name: eventDeliveryID
+        required: true
+        type: string
+      - description: delivery attempt id
+        in: path
+        name: deliveryAttemptID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/datastore.DeliveryAttempt'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve a delivery attempt
+      tags:
+      - Delivery Attempts
+  /v1/projects/{projectID}/eventdeliveries/{eventDeliveryID}/resend:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint retries an event delivery.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: event delivery id
+        in: path
+        name: eventDeliveryID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EventDeliveryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retry event delivery
+      tags:
+      - Event Deliveries
+  /v1/projects/{projectID}/eventdeliveries/batchretry:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint batch retries multiple event deliveries at once.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: A list of endpoint IDs to filter by
+        in: query
+        items:
+          type: string
+        name: endpointId
+        type: array
+      - in: query
+        name: eventId
+        type: string
+      - description: A list of event delivery statuses to filter by
+        in: query
+        items:
+          type: string
+        name: status
+        type: array
+      - in: query
+        name: subscriptionId
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Batch retry event delivery
+      tags:
+      - Event Deliveries
+  /v1/projects/{projectID}/eventdeliveries/forceresend:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint enables you retry a previously successful event delivery
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: event delivery ids
+        in: body
+        name: deliveryIds
+        required: true
+        schema:
+          allOf:
+          - $ref: '#/definitions/public.Stub'
+          - properties:
+              ids:
+                $ref: '#/definitions/models.IDs'
+            type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Force retry event delivery
+      tags:
+      - Event Deliveries
+  /v1/projects/{projectID}/events:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches app events with pagination
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: The end date
+        example: 2008-05-02T15:04:05
+        in: query
+        name: endDate
+        type: string
+      - description: A list of endpoint ids to filter by
+        in: query
+        items:
+          type: string
+        name: endpointId
+        type: array
+      - in: query
+        name: idempotencyKey
+        type: string
+      - description: A pagination cursor to fetch the next page of a list
+        example: 01H0JA5MEES38RRK3HTEJC647K
+        in: query
+        name: next_page_cursor
+        type: string
+      - description: The number of items to return per page
+        example: 20
+        in: query
+        name: perPage
+        type: integer
+      - description: A pagination cursor to fetch the previous page of a list
+        example: 01H0JATTVCXZK8FRDX1M1JN3QY
+        in: query
+        name: prev_page_cursor
+        type: string
+      - description: Any arbitrary value to filter the events payload
+        in: query
+        name: query
+        type: string
+      - in: query
+        name: sourceId
+        type: string
+      - description: The start date
+        example: 2006-01-02T15:04:05
+        in: query
+        name: startDate
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/public.pagedResponse'
+                  - properties:
+                      content:
+                        items:
+                          $ref: '#/definitions/models.EventResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all events
+      tags:
+      - Events
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates an endpoint event
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Event Details
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EventResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create an event
+      tags:
+      - Events
+  /v1/projects/{projectID}/events/{eventID}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves an event
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: event id
+        in: path
+        name: eventID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EventResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve an event
+      tags:
+      - Events
+  /v1/projects/{projectID}/events/{eventID}/replay:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint replays an event afresh assuming it is a new event.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: event id
+        in: path
+        name: eventID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EventResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Replay event
+      tags:
+      - Events
+  /v1/projects/{projectID}/events/batchreplay:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint replays multiple events at once.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - in: query
+        name: endpointID
+        type: string
+      - in: query
+        items:
+          type: string
+        name: endpointIDs
+        type: array
+      - in: query
+        name: eventID
+        type: string
+      - in: query
+        name: idempotencyKey
+        type: string
+      - in: query
+        name: ownerID
+        type: string
+      - in: query
+        name: query
+        type: string
+      - in: query
+        name: sourceID
+        type: string
+      - in: query
+        name: subscriptionID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/datastore.Event'
+                  - properties:
+                      data:
+                        $ref: '#/definitions/public.Stub'
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Batch replay events
+      tags:
+      - Events
+  /v1/projects/{projectID}/events/dynamic:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint does not require creating endpoint and subscriptions
+        ahead of time. Instead, you supply the endpoint and the payload, and Convoy
+        delivers the events
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Event Details
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/models.DynamicEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/public.Stub'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Dynamic Events
+      tags:
+      - Events
+  /v1/projects/{projectID}/events/fanout:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint uses the owner_id to fan out an event to multiple
+        endpoints.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Event Details
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/models.FanoutEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.EventResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Fan out an event
+      tags:
+      - Events
+  /v1/projects/{projectID}/meta-events:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches meta events with pagination
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: The end date
+        example: 2008-05-02T15:04:05
+        in: query
+        name: endDate
+        type: string
+      - description: A pagination cursor to fetch the next page of a list
+        example: 01H0JA5MEES38RRK3HTEJC647K
+        in: query
+        name: next_page_cursor
+        type: string
+      - description: The number of items to return per page
+        example: 20
+        in: query
+        name: perPage
+        type: integer
+      - description: A pagination cursor to fetch the previous page of a list
+        example: 01H0JATTVCXZK8FRDX1M1JN3QY
+        in: query
+        name: prev_page_cursor
+        type: string
+      - description: The start date
+        example: 2006-01-02T15:04:05
+        in: query
+        name: startDate
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/public.pagedResponse'
+                  - properties:
+                      content:
+                        items:
+                          $ref: '#/definitions/models.MetaEventResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all meta events
+      tags:
+      - Meta Events
+  /v1/projects/{projectID}/meta-events/{metaEventID}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves a meta event
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: meta event id
+        in: path
+        name: metaEventID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.MetaEventResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve a meta event
+      tags:
+      - Meta Events
+  /v1/projects/{projectID}/meta-events/{metaEventID}/resend:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint retries a meta event
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: meta event id
+        in: path
+        name: metaEventID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.MetaEventResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retry meta event
+      tags:
+      - Meta Events
+  /v1/projects/{projectID}/portal-links:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches multiple portal links
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: results per page
+        in: query
+        name: perPage
+        type: string
+      - description: page number
+        in: query
+        name: page
+        type: string
+      - description: sort order
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/public.pagedResponse'
+                  - properties:
+                      content:
+                        items:
+                          $ref: '#/definitions/models.PortalLinkResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all portal links
+      tags:
+      - Portal Links
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a portal link
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Portal Link Details
+        in: body
+        name: portallink
+        required: true
+        schema:
+          $ref: '#/definitions/models.PortalLink'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PortalLinkResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a portal link
+      tags:
+      - Portal Links
+  /v1/projects/{projectID}/portal-links/{portalLinkID}:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves a portal link by its id.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: portal link id
+        in: path
+        name: portalLinkID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PortalLinkResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve a portal link
+      tags:
+      - Portal Links
+    put:
+      consumes:
+      - application/json
+      description: This endpoint updates a portal link
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: portal link id
+        in: path
+        name: portalLinkID
+        required: true
+        type: string
+      - description: Portal Link Details
+        in: body
+        name: portallink
+        required: true
+        schema:
+          $ref: '#/definitions/models.PortalLink'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.PortalLinkResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a portal link
+      tags:
+      - Portal Links
+  /v1/projects/{projectID}/portal-links/{portalLinkID}/revoke:
+    put:
+      consumes:
+      - application/json
+      description: This endpoint revokes a portal link
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: portal link id
+        in: path
+        name: portalLinkID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Revoke a portal link
+      tags:
+      - Portal Links
+  /v1/projects/{projectID}/sources:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches multiple sources
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: A pagination cursor to fetch the next page of a list
+        example: 01H0JA5MEES38RRK3HTEJC647K
+        in: query
+        name: next_page_cursor
+        type: string
+      - description: The number of items to return per page
+        example: 20
+        in: query
+        name: perPage
+        type: integer
+      - description: A pagination cursor to fetch the previous page of a list
+        example: 01H0JATTVCXZK8FRDX1M1JN3QY
+        in: query
+        name: prev_page_cursor
+        type: string
+      - description: The custom source provider e.g. twitter, shopify
+        example: twitter
+        in: query
+        name: provider
+        type: string
+      - description: The source type e.g. http, pub_sub
+        example: http
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/public.pagedResponse'
+                  - properties:
+                      content:
+                        items:
+                          $ref: '#/definitions/models.SourceResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all sources
+      tags:
+      - Sources
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a source
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Source Details
+        in: body
+        name: source
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateSource'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.SourceResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a source
+      tags:
+      - Sources
+  /v1/projects/{projectID}/sources/{sourceID}:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes a source
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: source id
+        in: path
+        name: sourceID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete a source
+      tags:
+      - Sources
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves a source by its id
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Source ID
+        in: path
+        name: sourceID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.SourceResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve a source
+      tags:
+      - Sources
+    put:
+      consumes:
+      - application/json
+      description: This endpoint updates a source
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: source id
+        in: path
+        name: sourceID
+        required: true
+        type: string
+      - description: Source Details
+        in: body
+        name: source
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateSource'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.SourceResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a source
+      tags:
+      - Sources
+  /v1/projects/{projectID}/subscriptions:
+    get:
+      consumes:
+      - application/json
+      description: This endpoint fetches all the subscriptions
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: A list of endpointIDs to filter by
+        in: query
+        items:
+          type: string
+        name: endpointId
+        type: array
+      - description: A pagination cursor to fetch the next page of a list
+        example: 01H0JA5MEES38RRK3HTEJC647K
+        in: query
+        name: next_page_cursor
+        type: string
+      - description: The number of items to return per page
+        example: 20
+        in: query
+        name: perPage
+        type: integer
+      - description: A pagination cursor to fetch the previous page of a list
+        example: 01H0JATTVCXZK8FRDX1M1JN3QY
+        in: query
+        name: prev_page_cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/public.pagedResponse'
+                  - properties:
+                      content:
+                        items:
+                          $ref: '#/definitions/models.SubscriptionResponse'
+                        type: array
+                    type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: List all subscriptions
+      tags:
+      - Subscriptions
+    post:
+      consumes:
+      - application/json
+      description: This endpoint creates a subscriptions
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Subscription details
+        in: body
+        name: subscription
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateSubscription'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.SubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Create a subscription
+      tags:
+      - Subscriptions
+  /v1/projects/{projectID}/subscriptions/{subscriptionID}:
+    delete:
+      consumes:
+      - application/json
+      description: This endpoint deletes a subscription
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: subscription id
+        in: path
+        name: subscriptionID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Delete subscription
+      tags:
+      - Subscriptions
+    get:
+      consumes:
+      - application/json
+      description: This endpoint retrieves a single subscription
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: subscription id
+        in: path
+        name: subscriptionID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.SubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve a subscription
+      tags:
+      - Subscriptions
+    put:
+      consumes:
+      - application/json
+      description: This endpoint updates a subscription
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: subscription id
+        in: path
+        name: subscriptionID
+        required: true
+        type: string
+      - description: Subscription Details
+        in: body
+        name: subscription
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateSubscription'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.SubscriptionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update a subscription
+      tags:
+      - Subscriptions
+  /v1/projects/{projectID}/subscriptions/test_filter:
+    post:
+      consumes:
+      - application/json
+      description: This endpoint validates that a filter will match a certain payload
+        structure.
+      parameters:
+      - description: Project ID
+        in: path
+        name: projectID
+        required: true
+        type: string
+      - description: Filter Details
+        in: body
+        name: filter
+        required: true
+        schema:
+          $ref: '#/definitions/models.TestFilter'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  type: boolean
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            allOf:
+            - $ref: '#/definitions/util.ServerResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/public.Stub'
+              type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Validate subscription filter
+      tags:
+      - Subscriptions
+schemes:
+- https
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
+tags:
+- description: Organisation related APIs
+  name: Organisations
+- description: Subscription related APIs
+  name: Subscriptions
+- description: Endpoint related APIs
+  name: Endpoints
+- description: Event related APIs
+  name: Events
+- description: Source related APIs
+  name: Sources
+- description: EventDelivery related APIs
+  name: Event Deliveries
+- description: Delivery Attempt related APIs
+  name: Delivery Attempts
+- description: Project related APIs
+  name: Projects
+- description: Portal Links related APIs
+  name: Portal Links

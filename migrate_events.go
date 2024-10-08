@@ -3,15 +3,14 @@ package main
 import (
 	"context"
 	"database/sql"
-	ncache "github.com/frain-dev/convoy/cache/noop"
-	"github.com/frain-dev/convoy/database/postgres"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/postgres"
 
-	"github.com/frain-dev/convoy/datastore"
-	"github.com/frain-dev/convoy/util"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/util"
 )
 
 func (m *Migrator) RunEventMigration() error {
-	eventRepo := postgres.NewEventRepo(m, ncache.NewNoopCache())
+	eventRepo := postgres.NewEventRepo(m)
 
 	for _, p := range m.projects {
 		err := m.loadEvents(eventRepo, p, defaultPageable)
@@ -42,7 +41,7 @@ const (
 	`
 )
 
-func (e *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) error {
+func (m *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) error {
 	ev := make([]map[string]interface{}, 0, len(events))
 	evEndpoints := make([]postgres.EventEndpoint, 0, len(events)*2)
 
@@ -51,7 +50,7 @@ func (e *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) err
 	for i := range events {
 		event := &events[i]
 
-		if _, ok := e.eventIDs[event.UID]; ok { //if previously saved, ignore
+		if _, ok := m.eventIDs[event.UID]; ok { // if previously saved, ignore
 			continue
 		}
 
@@ -65,13 +64,13 @@ func (e *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) err
 		var sourceID *string
 
 		for _, endpointID := range event.Endpoints {
-			if _, ok := e.endpointIDs[endpointID]; !ok {
+			if _, ok := m.endpointIDs[endpointID]; !ok {
 				continue
 			}
 		}
 
 		if !util.IsStringEmpty(event.SourceID) {
-			if _, ok := e.sourceIDs[event.SourceID]; !ok {
+			if _, ok := m.sourceIDs[event.SourceID]; !ok {
 				continue
 			}
 
@@ -102,7 +101,7 @@ func (e *Migrator) SaveEvents(ctx context.Context, events []datastore.Event) err
 		}
 	}
 
-	tx, err := e.newDB.BeginTxx(ctx, &sql.TxOptions{})
+	tx, err := m.newDB.BeginTxx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return err
 	}

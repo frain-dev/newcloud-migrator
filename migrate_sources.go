@@ -3,15 +3,14 @@ package main
 import (
 	"context"
 	"database/sql"
-	ncache "github.com/frain-dev/convoy/cache/noop"
-	"github.com/frain-dev/convoy/database/postgres"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/postgres"
 
-	"github.com/frain-dev/convoy/datastore"
-	"github.com/frain-dev/convoy/util"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/util"
 )
 
 func (m *Migrator) RunSourceMigration() error {
-	sourceRepo := postgres.NewSourceRepo(m, ncache.NewNoopCache())
+	sourceRepo := postgres.NewSourceRepo(m)
 	for _, p := range m.projects {
 		err := m.loadProjectSources(sourceRepo, p.UID, defaultPageable)
 		if err != nil {
@@ -51,7 +50,7 @@ const (
     `
 )
 
-func (s *Migrator) SaveSources(ctx context.Context, sources []datastore.Source) error {
+func (m *Migrator) SaveSources(ctx context.Context, sources []datastore.Source) error {
 	sourceValues := make([]map[string]interface{}, 0, len(sources))
 	sourceVerifierValues := make([]map[string]interface{}, 0, len(sources))
 
@@ -110,7 +109,7 @@ func (s *Migrator) SaveSources(ctx context.Context, sources []datastore.Source) 
 		})
 	}
 
-	tx, err := s.newDB.BeginTxx(ctx, &sql.TxOptions{})
+	tx, err := m.newDB.BeginTxx(ctx, &sql.TxOptions{})
 	if err != nil {
 		return err
 	}

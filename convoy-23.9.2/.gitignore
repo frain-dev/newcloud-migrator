@@ -1,0 +1,39 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+.idea
+
+/api/dashboard/ui/build/*
+!/api/dashboard/ui/build/go_test_stub.txt
+/data/mongo/
+.DS_Store
+*.db
+pgdata
+
+# ui depencencies
+**/node_modules
+**/source-maps
+**/.angular/cache
+**/storybook-static
+
+# Convoy specific
+convoy
+convoy.json
+docker-compose.yml
+compose.yml
+typesense_data
+postgres_data
+redis_data
+/.run/go test github.com_frain-dev_convoy_server.run.xml

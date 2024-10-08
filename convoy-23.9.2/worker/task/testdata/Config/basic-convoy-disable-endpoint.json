@@ -1,0 +1,51 @@
+{
+    "queue": {
+        "type": "redis",
+        "redis": {
+            "dsn": "abc"
+        }
+    },
+    "server": {
+        "http": {
+            "port": 80
+        }
+    },
+    "auth": {
+        "file": {
+            "basic": [
+                {
+                    "username": "test",
+                    "password": "test",
+                    "role": {
+                        "type": "admin",
+                        "groups": [
+                            "sendcash-pay"
+                        ]
+                    }
+                }
+            ]
+        }
+    },
+    "group": {
+        "strategy": {
+            "type": "default",
+            "default": {
+                "intervalSeconds": 20,
+                "retryLimit": 3
+            }
+        },
+        "signature": {
+            "header": "X-Company-Event-WebHook-Signature",
+            "hash": "SHA256"
+        }
+    },
+    "smtp": {
+        "provider": "sendgrid",
+        "url": "smtp.sendgrid.net",
+        "port": 2525,
+        "username": "apikey",
+        "password": "<api-key-from-sendgrid>",
+        "from": "support@frain.dev"
+    },
+    "disable_endpoint": true
+}

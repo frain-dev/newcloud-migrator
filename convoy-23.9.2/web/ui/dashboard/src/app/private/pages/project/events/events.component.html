@@ -1,0 +1,139 @@
+<div class="h-[705px]" *ngIf="isPageLoading">
+	<convoy-loader [isTransparent]="true"></convoy-loader>
+</div>
+
+<ng-container *ngIf="!isPageLoading">
+	<ng-container *ngIf="!hasEvents">
+		<div convoy-card class="flex items-center justify-center flex-col py-82px h-full text-center px-40px">
+			<img src="/assets/img/events-empty-state-image.svg" alt="events empty state image" class="mb-48px" />
+			<h3 class="mb-10px text-16 font-bold">{{ privateService.getProjectDetails?.type === 'incoming' ? 'You have no incoming events.' : 'You have no outgoing events yet' }}</h3>
+			<p class="text-14 text-grey-40 max-w-[428px]" *ngIf="isProjectConfigurationComplete">
+				{{ privateService.getProjectDetails?.type === 'incoming' ? 'Start receiving webhooks by adding your webhook URL into your webhook sender platform "' + lastestSource?.name + '"' : 'You have not sent any webhook events yet. Learn how to do that in our docs' }}
+			</p>
+			<p class="text-14 text-grey-40 max-w-[428px]" *ngIf="!isProjectConfigurationComplete">
+				{{ privateService.getProjectDetails?.type === 'incoming' ? 'You need to create an endpoint subscribe it to an event source (sender of your webhooks) to start receiving events' : 'You need to create an endpoint and subscribe it to listen to events' }}
+			</p>
+
+			<ng-container *ngIf="privateService.getProjectDetails?.type === 'incoming' && isProjectConfigurationComplete">
+				<div class="flex items-center justify-between w-full h-50px border border-grey-10 bg-[#F7F9FC] rounded-[6px] px-16px mb-32px max-w-[500px] mt-42px">
+					<span class="text-14 text-grey-40 font-normal whitespace-nowrap w-[440px] overflow-hidden text-ellipsis">{{ lastestSource?.url }}</span>
+					<convoy-copy-button [text]="lastestSource?.url || ''" notificationText="Source URL copied to clipboard"></convoy-copy-button>
+				</div>
+
+				<ng-container *ngIf="lastestEventDeliveries.length === 0">
+					<div convoy-card class="flex justify-between py-10px px-20px max-w-[446px] w-full items-center">
+						<img src="/assets/img/time-icon.svg" alt="timer icon" class="mr-20px w-38px" />
+						<p class="mr-12px text-14 text-grey-80">Waiting on your first web-hook event</p>
+						<img src="/assets/img/Loader.png" class="opacity-50 w-50px" alt="loader icon" />
+					</div>
+					<a href="https://getconvoy.io/docs/getting-started/receiving-webhook-example" target="_blank" referrerpolicy="no-referrer" convoy-button fill="clear" class="mt-48px font-medium">Don't See Your Events Yet?</a>
+				</ng-container>
+
+				<ng-container *ngIf="lastestEventDeliveries.length > 0">
+					<div class="w-full max-w-[500px]" convoy-card>
+						<div class="flex w-full border-b border-b-grey-10 text-grey-40 text-14 p-10px">
+							<div class="w-1/5 text-left">Status</div>
+							<div class="w-1/3 text-left ml-2px">Subscription</div>
+							<div class="w-1/5 text-left ml-2px">Event Time</div>
+							<div class="w-1/5 text-left ml-2px">Retry Time</div>
+						</div>
+						<div class="flex text-left text-14 p-10px cursor-pointer hover:bg-grey-10" *ngFor="let event of lastestEventDeliveries" [routerLink]="['./event-deliveries/' + event.uid]">
+							<div class="w-1/5">
+								<div convoy-tag [color]="event.status | statuscolor">{{ event?.status }}</div>
+							</div>
+							<div class="w-1/3 ml-2px max-w-[159px] whitespace-nowrap overflow-hidden text-ellipsis">{{ event?.endpoint_metadata?.title }}</div>
+							<div class="w-1/5 ml-2px">{{ event.created_at | date: 'mediumTime' }}</div>
+							<div class="w-1/5 ml-2px">{{ event.updated_at | date: 'mediumTime' }}</div>
+						</div>
+					</div>
+
+					<button (click)="continueToDashboard()" convoy-button class="mt-48px font-medium">Continue to Dashboard</button>
+				</ng-container>
+			</ng-container>
+
+			<button convoy-button *ngIf="!isProjectConfigurationComplete" class="mt-48px" (click)="router.navigateByUrl('/projects/' + privateService.getProjectDetails?.uid + '/setup')">Complete project setup</button>
+
+			<a href="https://getconvoy.io/docs/getting-started/sending-webhook-example" convoy-button target="_blank" referrerpolicy="no-referrer" fill="outline" class="mt-48px" *ngIf="privateService.getProjectDetails?.type === 'outgoing' && isProjectConfigurationComplete">
+				Go to documentation
+				<svg class="ml-8px fill-primary-100 w-20px h-20px">
+					<use xlink:href="#external-link-icon"></use>
+				</svg>
+			</a>
+		</div>
+	</ng-container>
+
+	<ng-container *ngIf="hasEvents">
+		<div class="text-12 font-medium flex items-center uppercase">
+			<a routerLink="/projects" class="font-medium cursor-pointer">Projects</a>
+			<svg width="16" height="16" class="mx-4px">
+				<use xlink:href="#arrow-right-icon"></use>
+			</svg>
+			{{ privateService.getProjectDetails?.name }}
+			<svg width="16" height="16" class="mx-4px">
+				<use xlink:href="#arrow-right-icon"></use>
+			</svg>
+			<span class="text-primary-100 font-medium">Events</span>
+		</div>
+
+		<div class="py-24px flex items-center">
+			<convoy-date-picker (selectedDateRange)="getSelectedDateRange($event)" (clearDates)="getSelectedDateRange()"></convoy-date-picker>
+
+			<div convoy-dropdown size="sm" position="left">
+				<button dropdownTrigger convoy-button size="sm" fill="outline" class="px-10px !border-primary-400 ml-16px">
+					<span class="text-grey-60 mr-4px">Filter By:</span>
+					<span class="text-primary-100 capitalize">{{ dashboardFrequency }}</span>
+					<img src="/assets/img/angle-arrow-down.svg" alt="arrow down icon" class="w-14px h-14px ml-10px" />
+				</button>
+
+				<ul dropdownOptions>
+					<li convoy-dropdown-option convoy-list-item *ngFor="let filterOption of filterOptions" class="text-14 px-20px" [active]="dashboardFrequency == filterOption ? 'true' : 'false'" [hasBorder]="true">
+						<button convoy-button color="grey" fill="text" (click)="dashboardFrequency = filterOption; fetchDashboardData()" class="capitalize text-left w-full !justify-start">
+							{{ filterOption }}
+						</button>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<div convoy-card class="relative mb-22px">
+			<ul class="flex flex-wrap items-center min-h-[76px] metrics">
+				<li class="bg-[url(/assets/img/message-icon-transparent.svg)] bg-[length:30px_30px] bg-no-repeat flex items-center px-30px py-16px border-r border-grey-10 [background-position-x:185px] [background-position-y:46px] min-w-[220px]">
+					<img src="/assets/img/message-icon.svg" class="mr-30px" alt="message icon" />
+					<div *ngIf="isloadingDashboardData">
+						<convoy-skeleton-loader className="w-60px h-16px mb-10px"></convoy-skeleton-loader>
+						<convoy-skeleton-loader className="w-120px h-16px"></convoy-skeleton-loader>
+					</div>
+					<div *ngIf="!isloadingDashboardData">
+						<div class="text-16 font-medium">{{ dashboardData.events_sent | number }}</div>
+						<div class="text-grey-40 text-14">
+							<span class="font-normal">Event</span>
+							<span class="font-normal" *ngIf="dashboardData.events_sent > 1">s</span>
+							{{ privateService.getProjectDetails?.type === 'incoming' ? 'Ingested' : 'Sent' }}
+						</div>
+					</div>
+				</li>
+
+				<li class="bg-[url(/assets/img/apps-icon-transparent.svg)] bg-[length:30px_30px] bg-no-repeat flex items-center px-30px py-16px border-r border-grey-10 [background-position-x:185px] [background-position-y:46px] min-w-[220px]">
+					<img src="/assets/img/apps-icon.svg" class="mr-30px" alt="apps icon" />
+					<div *ngIf="isloadingDashboardData">
+						<convoy-skeleton-loader className="w-60px h-16px mb-10px"></convoy-skeleton-loader>
+						<convoy-skeleton-loader className="w-100px h-16px"></convoy-skeleton-loader>
+					</div>
+					<div *ngIf="!isloadingDashboardData">
+						<div class="text-16 font-medium">{{ dashboardData.apps | number }}</div>
+						<div class="text-grey-40 text-14">
+							<span class="font-normal">Endpoint</span>
+							<span class="font-normal" *ngIf="dashboardData.apps > 1">s</span>
+						</div>
+					</div>
+				</li>
+			</ul>
+
+			<div class="border-t border-grey-10 p-16px">
+				<convoy-chart [chartData]="chartData" [isLoading]="isloadingDashboardData"></convoy-chart>
+			</div>
+		</div>
+
+		<app-event-deliveries (pushEventDeliveries)="eventDeliveries = $event"></app-event-deliveries>
+	</ng-container>
+</ng-container>

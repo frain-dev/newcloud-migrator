@@ -5,8 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/frain-dev/convoy/database/hooks"
-	"github.com/frain-dev/convoy/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/hooks"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
 )
@@ -144,14 +144,14 @@ func (m *Migrator) Run() error {
 	return nil
 }
 
-func (p *Migrator) GetDB() *sqlx.DB {
-	return p.oldDB
+func (m *Migrator) GetDB() *sqlx.DB {
+	return m.oldDB
 }
 
-func (p *Migrator) Close() error {
+func (m *Migrator) Close() error {
 	return nil
 }
 
-func (p *Migrator) GetHook() *hooks.Hook {
+func (m *Migrator) GetHook() *hooks.Hook {
 	return nil
 }

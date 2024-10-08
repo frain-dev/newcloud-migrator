@@ -1,0 +1,21 @@
+{
+    "database": {
+        "scheme": "postgres",
+        "host": "inside-config-file",
+        "username": "postgres",
+        "password": "postgres",
+        "database": "convoy",
+        "options": "sslmode=disable&connect_timeout=30",
+        "port": 5432
+    },
+    "redis": {
+        "port": 8379,
+        "scheme": "redis",
+        "host": "localhost"
+    },
+    "server": {
+        "http": {
+            "port": 80
+        }
+    }
+}

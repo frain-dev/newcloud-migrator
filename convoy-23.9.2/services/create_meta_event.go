@@ -1,0 +1,113 @@
+package services
+
+import (
+	"context"
+	"encoding/json"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/pkg/msgpack"
+	"time"
+
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/pkg/log"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/queue"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/worker/task"
+	"github.com/oklog/ulid/v2"
+)
+
+type MetaEvent struct {
+	queue         queue.Queuer
+	projectRepo   datastore.ProjectRepository
+	metaEventRepo datastore.MetaEventRepository
+}
+
+func NewMetaEvent(queue queue.Queuer, projectRepo datastore.ProjectRepository, metaEventRepo datastore.MetaEventRepository) *MetaEvent {
+	return &MetaEvent{queue: queue, projectRepo: projectRepo, metaEventRepo: metaEventRepo}
+}
+
+func (m *MetaEvent) Run(eventType string, projectID string, data interface{}) error {
+	project, err := m.projectRepo.FetchProjectByID(context.Background(), projectID)
+	if err != nil {
+		return err
+	}
+
+	cfg := project.Config.MetaEvent
+	if !cfg.IsEnabled {
+		return nil
+	}
+
+	if !m.isSubscribed(eventType, cfg.EventType) {
+		return nil
+	}
+
+	dByte, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	mP := datastore.MetaEventPayload{
+		EventType: eventType,
+		Data:      dByte,
+	}
+
+	mpByte, err := json.Marshal(mP)
+	if err != nil {
+		return err
+	}
+
+	metaData := &datastore.Metadata{
+		NumTrials:       0,
+		RetryLimit:      project.Config.Strategy.RetryCount,
+		Data:            mpByte,
+		Raw:             string(mpByte),
+		IntervalSeconds: project.Config.Strategy.Duration,
+		Strategy:        project.Config.Strategy.Type,
+		NextSendTime:    time.Now(),
+	}
+
+	metaEvent := &datastore.MetaEvent{
+		UID:       ulid.Make().String(),
+		ProjectID: projectID,
+		EventType: eventType,
+		Status:    datastore.ScheduledEventStatus,
+		Metadata:  metaData,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	err = m.metaEventRepo.CreateMetaEvent(context.Background(), metaEvent)
+	if err != nil {
+		log.WithError(err).Error("failed to create meta event")
+		return err
+	}
+
+	s := task.MetaEvent{
+		MetaEventID: metaEvent.UID,
+		ProjectID:   projectID,
+	}
+
+	bytes, err := msgpack.EncodeMsgPack(s)
+	if err != nil {
+		return err
+	}
+
+	err = m.queue.Write(convoy.MetaEventProcessor, convoy.MetaEventQueue, &queue.Job{
+		ID:      metaEvent.UID,
+		Payload: bytes,
+	})
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *MetaEvent) isSubscribed(eventType string, events []string) bool {
+	for _, event := range events {
+		if event == eventType {
+			return true
+		}
+	}
+
+	return false
+}

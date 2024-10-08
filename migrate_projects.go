@@ -5,17 +5,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	ncache "github.com/frain-dev/convoy/cache/noop"
-	"github.com/frain-dev/convoy/database/postgres"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/postgres"
 	"time"
 
-	"github.com/frain-dev/convoy/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
 	"github.com/jmoiron/sqlx"
 	log "github.com/sirupsen/logrus"
 )
 
 func (m *Migrator) RunProjectMigration() error {
-	projectRepo := postgres.NewProjectRepo(m, ncache.NewNoopCache())
+	projectRepo := postgres.NewProjectRepo(m)
 
 	for _, org := range m.userOrgs {
 		projects, err := m.loadOrgProjects(projectRepo, org.UID)

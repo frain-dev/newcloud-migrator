@@ -2,17 +2,16 @@ package main
 
 import (
 	"context"
-	"github.com/frain-dev/convoy/auth"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/auth"
 
-	ncache "github.com/frain-dev/convoy/cache/noop"
-	"github.com/frain-dev/convoy/database/postgres"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/postgres"
 
-	"github.com/frain-dev/convoy/datastore"
-	"github.com/frain-dev/convoy/util"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/util"
 )
 
 func (m *Migrator) RunAPIKeyMigration() error {
-	apiKeyRepo := postgres.NewAPIKeyRepo(m, ncache.NewNoopCache())
+	apiKeyRepo := postgres.NewAPIKeyRepo(m)
 
 	// migrate project api keys
 	for _, p := range m.projects {
@@ -42,7 +41,7 @@ const (
     `
 )
 
-func (a *Migrator) SaveAPIKeys(ctx context.Context, keys []datastore.APIKey) error {
+func (m *Migrator) SaveAPIKeys(ctx context.Context, keys []datastore.APIKey) error {
 	values := make([]map[string]interface{}, 0, len(keys))
 
 	for i := range keys {
@@ -89,7 +88,7 @@ func (a *Migrator) SaveAPIKeys(ctx context.Context, keys []datastore.APIKey) err
 	}
 
 	if len(values) > 0 {
-		_, err := a.newDB.NamedExecContext(ctx, saveAPIKeys, values)
+		_, err := m.newDB.NamedExecContext(ctx, saveAPIKeys, values)
 		return err
 	}
 	return nil

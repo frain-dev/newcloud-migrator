@@ -3,10 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	ncache "github.com/frain-dev/convoy/cache/noop"
-	"github.com/frain-dev/convoy/database/postgres"
-	"github.com/frain-dev/convoy/datastore"
-	"github.com/frain-dev/convoy/util"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/postgres"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/util"
 )
 
 func (m *Migrator) RunOrgMigration() error {
@@ -32,7 +31,7 @@ func (m *Migrator) RunOrgMigration() error {
 		return fmt.Errorf("user does not own any orgs")
 	}
 
-	orgMemberRepo := postgres.NewOrgMemberRepo(m, ncache.NewNoopCache())
+	orgMemberRepo := postgres.NewOrgMemberRepo(m)
 	userIDs := map[string]struct{}{}
 	members := []*datastore.OrganisationMember{}
 	for _, org := range userOrgs {
@@ -115,7 +114,7 @@ const (
 	`
 )
 
-func (o *Migrator) SaveOrganisationMembers(ctx context.Context, members []*datastore.OrganisationMember) error {
+func (m *Migrator) SaveOrganisationMembers(ctx context.Context, members []*datastore.OrganisationMember) error {
 	values := make([]map[string]interface{}, 0, len(members))
 
 	for _, member := range members {
@@ -142,6 +141,6 @@ func (o *Migrator) SaveOrganisationMembers(ctx context.Context, members []*datas
 		})
 	}
 
-	_, err := o.newDB.NamedExecContext(ctx, saveOrgMembers, values)
+	_, err := m.newDB.NamedExecContext(ctx, saveOrgMembers, values)
 	return err
 }

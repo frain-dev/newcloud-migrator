@@ -3,13 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
-	ncache "github.com/frain-dev/convoy/cache/noop"
-	"github.com/frain-dev/convoy/database/postgres"
-	"github.com/frain-dev/convoy/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/postgres"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
 )
 
 func (m *Migrator) RunEndpointMigration() error {
-	endpointRepo := postgres.NewEndpointRepo(m, ncache.NewNoopCache())
+	endpointRepo := postgres.NewEndpointRepo(m)
 
 	for _, p := range m.projects {
 		endpoints, err := m.loadProjectEndpoints(endpointRepo, p.UID, defaultPageable)
@@ -60,11 +59,11 @@ func (m *Migrator) SaveEndpoints(ctx context.Context, endpoints []datastore.Endp
 
 		values = append(values, map[string]interface{}{
 			"id":                  endpoint.UID,
-			"name":                endpoint.Name,
+			"name":                endpoint.Title,
 			"status":              endpoint.Status,
 			"secrets":             endpoint.Secrets,
 			"owner_id":            endpoint.OwnerID,
-			"url":                 endpoint.Url,
+			"url":                 endpoint.TargetURL,
 			"description":         endpoint.Description,
 			"http_timeout":        10,
 			"rate_limit":          0,

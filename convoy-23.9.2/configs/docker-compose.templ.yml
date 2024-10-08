@@ -1,0 +1,107 @@
+version: "3"
+
+services:
+    web:
+        image: docker.cloudsmith.io/convoy/convoy/frain-dev/convoy:$VERSION
+        command: [ "/start.sh" ]
+        hostname: web
+        container_name: web
+        volumes:
+            - ./convoy.json:/convoy.json
+        restart: on-failure
+        depends_on:
+            - postgres
+            - redis_server
+            - typesense
+        networks:
+            - backendCluster
+
+    scheduler:
+        image: docker.cloudsmith.io/convoy/convoy/frain-dev/convoy:$VERSION
+        command: ["./cmd", "scheduler", "--config", "convoy.json"]
+        volumes:
+            - ./convoy.json:/convoy.json
+        restart: on-failure
+        depends_on:
+            - postgres
+            - redis_server
+            - typesense
+        networks:
+            - backendCluster
+
+    worker:
+        image: docker.cloudsmith.io/convoy/convoy/frain-dev/convoy:$VERSION
+        command: ["./cmd", "worker", "--config", "convoy.json"]
+        volumes:
+            - ./convoy.json:/convoy.json
+        restart: on-failure
+        depends_on:
+            - postgres
+            - redis_server
+            - typesense
+        networks:
+            - backendCluster
+
+    ingest:
+        image: docker.cloudsmith.io/convoy/convoy/frain-dev/convoy:$VERSION
+        command: ["./cmd", "ingest", "--config", "convoy.json"]
+        volumes:
+          - ./convoy.json:/convoy.json
+        restart: on-failure
+        depends_on:
+          - postgres
+          - redis_server
+          - typesense
+        networks:
+          - backendCluster
+
+    postgres:
+      image: postgres:15.2-alpine
+      restart: unless-stopped
+      environment:
+        POSTGRES_DB: convoy
+        POSTGRES_USER: convoy
+        POSTGRES_PASSWORD: convoy
+        PGDATA: /data/postgres
+      volumes:
+        - ./postgres_data:/data/postgres
+      networks:
+        - backendCluster
+
+    redis_server:
+        image: redis:alpine
+        hostname: redis_server
+        container_name: redis_server
+        restart: always
+        networks:
+            - backendCluster
+
+    typesense:
+        image: typesense/typesense:0.22.2
+        hostname: typesense
+        container_name: typesense
+        restart: always
+        environment:
+            TYPESENSE_DATA_DIR: /data/typesense
+            TYPESENSE_ENABLE_CORS: "true"
+            TYPESENSE_API_KEY: "convoy"
+        volumes:
+            - ./typesense-data:/data/typesense
+        networks:
+            - backendCluster
+
+    caddy:
+        image: caddy
+        restart: unless-stopped
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./caddyfile:/etc/caddy/Caddyfile
+        depends_on:
+            - web
+        networks:
+            - backendCluster
+
+networks:
+    backendCluster:

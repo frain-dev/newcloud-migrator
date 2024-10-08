@@ -2,15 +2,14 @@ package main
 
 import (
 	"context"
-	ncache "github.com/frain-dev/convoy/cache/noop"
-	"github.com/frain-dev/convoy/database/postgres"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/database/postgres"
 
-	"github.com/frain-dev/convoy/datastore"
-	"github.com/frain-dev/convoy/util"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/datastore"
+	"github.com/frain-dev/newcloud-migrator/convoy-23.9.2/util"
 )
 
 func (m *Migrator) RunEventDeliveriesMigration() error {
-	eventDeliveryRepo := postgres.NewEventDeliveryRepo(m, ncache.NewNoopCache())
+	eventDeliveryRepo := postgres.NewEventDeliveryRepo(m)
 
 	for _, p := range m.projects {
 		err := m.loadEventDeliveries(eventDeliveryRepo, p, defaultPageable)
@@ -37,14 +36,14 @@ const (
     `
 )
 
-func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datastore.EventDelivery) error {
+func (m *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datastore.EventDelivery) error {
 	values := make([]map[string]interface{}, 0, len(deliveries))
 	dedupe := map[string]int{}
 
 	for i := range deliveries {
 		delivery := &deliveries[i]
 
-		if _, ok := e.deliveryIDs[delivery.UID]; ok { //if previously saved, ignore
+		if _, ok := m.deliveryIDs[delivery.UID]; ok { // if previously saved, ignore
 			continue
 		}
 
@@ -58,18 +57,18 @@ func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datasto
 		var endpointID *string
 
 		if !util.IsStringEmpty(delivery.EndpointID) {
-			if _, ok := e.endpointIDs[delivery.EndpointID]; !ok {
+			if _, ok := m.endpointIDs[delivery.EndpointID]; !ok {
 				continue
 			}
 
 			endpointID = &delivery.EndpointID
 		}
 
-		if _, ok := e.eventIDs[delivery.EventID]; !ok {
+		if _, ok := m.eventIDs[delivery.EventID]; !ok {
 			continue
 		}
 
-		if _, ok := e.subIDs[delivery.SubscriptionID]; !ok {
+		if _, ok := m.subIDs[delivery.SubscriptionID]; !ok {
 			continue
 		}
 
@@ -96,7 +95,7 @@ func (e *Migrator) SaveEventDeliveries(ctx context.Context, deliveries []datasto
 	}
 
 	if len(values) > 0 {
-		_, err := e.newDB.NamedExecContext(ctx, saveEventDeliveries, values)
+		_, err := m.newDB.NamedExecContext(ctx, saveEventDeliveries, values)
 		return err
 	}
 	return nil
