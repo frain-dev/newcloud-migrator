@@ -44,9 +44,8 @@ const (
 
 	saveProjectConfigurations = `
 	INSERT INTO convoy.project_configurations (
-		id, retention_policy_policy, max_payload_read_size,
-		replay_attacks_prevention_enabled,
-		retention_policy_enabled, ratelimit_count,
+		id, max_payload_read_size,
+		replay_attacks_prevention_enabled, ratelimit_count,
 		ratelimit_duration, strategy_type,
 		strategy_duration, strategy_retry_count,
 		signature_header, signature_versions,
@@ -54,13 +53,13 @@ const (
         disable_endpoint, meta_events_enabled,
         meta_events_type,meta_events_event_type,
         meta_events_url,meta_events_secret,
-        meta_events_pub_sub, search_policy
+        meta_events_pub_sub, search_policy, 
+		multiple_endpoint_subscriptions
 	  )
 	  VALUES
 		(
-		:id, :retention_policy_policy, :max_payload_read_size,
-		:replay_attacks_prevention_enabled,
-		:retention_policy_enabled, :ratelimit_count,
+		:id, :max_payload_read_size,
+		:replay_attacks_prevention_enabled, :ratelimit_count,
 		:ratelimit_duration, :strategy_type,
 		:strategy_duration, :strategy_retry_count,
 		:signature_header, :signature_versions,
@@ -68,7 +67,8 @@ const (
         :disable_endpoint, :meta_events_enabled,
         :meta_events_type,:meta_events_event_type,
         :meta_events_url,:meta_events_secret,
-        :meta_events_pub_sub, :search_policy
+        :meta_events_pub_sub, :search_policy, 
+		 :multiple_endpoint_subscriptions
 		)
 	`
 )
@@ -99,10 +99,8 @@ func (m *Migrator) SaveProjects(ctx context.Context, projects []*datastore.Proje
 
 		cfgs = append(cfgs, map[string]interface{}{
 			"id":                                project.ProjectConfigID,
-			"retention_policy_policy":           rc.Policy,
 			"max_payload_read_size":             project.Config.MaxIngestSize,
 			"replay_attacks_prevention_enabled": project.Config.ReplayAttacks,
-			"retention_policy_enabled":          project.Config.IsRetentionPolicyEnabled,
 			"ratelimit_count":                   rlc.Count,
 			"ratelimit_duration":                rlc.Duration,
 			"strategy_type":                     sc.Type,

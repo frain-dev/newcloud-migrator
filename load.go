@@ -7,6 +7,7 @@ import (
 	ncache "github.com/frain-dev/convoy/cache/noop"
 	"github.com/frain-dev/convoy/database/postgres"
 	"github.com/frain-dev/convoy/datastore"
+	newConvoyDatastore "github.com/frain-dev/newConvoy/datastore"
 	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -109,11 +110,56 @@ func (m *Migrator) loadOrgProjects(projectRepo datastore.ProjectRepository, orgI
 	return projectRepo.LoadProjects(context.Background(), &datastore.ProjectFilter{OrgID: orgID})
 }
 
-func (m *Migrator) loadProjectEndpoints(endpointRepo datastore.EndpointRepository, projectID string, pageable datastore.Pageable) ([]datastore.Endpoint, error) {
+func transformEndpoints(endpoints []datastore.Endpoint) []newConvoyDatastore.Endpoint {
+	e := make([]newConvoyDatastore.Endpoint, len(endpoints))
+	for i, endpoint := range endpoints {
+		secrets := newConvoyDatastore.Secrets{}
+		for j, secret := range endpoint.Secrets {
+			secrets[j] = newConvoyDatastore.Secret(secret)
+		}
+
+		auths := &newConvoyDatastore.EndpointAuthentication{
+			Type: newConvoyDatastore.EndpointAuthenticationType(endpoint.Authentication.Type),
+			ApiKey: &newConvoyDatastore.ApiKey{
+				HeaderValue: endpoint.Authentication.ApiKey.HeaderValue,
+				HeaderName:  endpoint.Authentication.ApiKey.HeaderName,
+			},
+		}
+
+		e[i] = newConvoyDatastore.Endpoint{
+			UID:                endpoint.UID,
+			ProjectID:          endpoint.ProjectID,
+			OwnerID:            endpoint.OwnerID,
+			Url:                endpoint.TargetURL,
+			Name:               endpoint.Title,
+			AdvancedSignatures: endpoint.AdvancedSignatures,
+			Description:        endpoint.Description,
+			SlackWebhookURL:    endpoint.SlackWebhookURL,
+			SupportEmail:       endpoint.SupportEmail,
+			AppID:              endpoint.AppID,
+			Status:             newConvoyDatastore.EndpointStatus(endpoint.Status),
+			Events:             endpoint.Events,
+			Secrets:            secrets,
+			Authentication:     auths,
+			RateLimit:          endpoint.RateLimit,
+			HttpTimeout:        0,
+			RateLimitDuration:  0,
+			CreatedAt:          endpoint.CreatedAt,
+			UpdatedAt:          endpoint.UpdatedAt,
+			DeletedAt:          endpoint.DeletedAt,
+		}
+	}
+
+	return e
+}
+
+func (m *Migrator) loadProjectEndpoints(endpointRepo datastore.EndpointRepository, projectID string, pageable datastore.Pageable) ([]newConvoyDatastore.Endpoint, error) {
 	endpoints, paginationData, err := endpointRepo.LoadEndpointsPaged(context.Background(), projectID, &datastore.Filter{}, pageable)
 	if err != nil {
 		return nil, err
 	}
+
+	transformedEndpoints := transformEndpoints(endpoints)
 
 	if paginationData.HasNextPage {
 		pageable.NextCursor = endpoints[len(endpoints)-1].UID
@@ -122,10 +168,10 @@ func (m *Migrator) loadProjectEndpoints(endpointRepo datastore.EndpointRepositor
 			log.WithError(err).Errorf("failed to load next members page, next cursor is %s", paginationData.NextPageCursor)
 		}
 
-		endpoints = append(endpoints, moreEndpoints...)
+		transformedEndpoints = append(transformedEndpoints, moreEndpoints...)
 	}
 
-	return endpoints, nil
+	return transformedEndpoints, nil
 }
 
 func (m *Migrator) addHeader(r *http.Request) {

@@ -6,9 +6,6 @@ import (
 	ncache "github.com/frain-dev/convoy/cache/noop"
 	"github.com/frain-dev/convoy/database/postgres"
 	"github.com/frain-dev/convoy/datastore"
-	"github.com/frain-dev/convoy/util"
-	"strings"
-	"time"
 )
 
 func (m *Migrator) RunEndpointMigration() error {
@@ -61,43 +58,18 @@ func (m *Migrator) SaveEndpoints(ctx context.Context, endpoints []datastore.Endp
 
 		ac := endpoint.GetAuthConfig()
 
-		httpTimeout := int64(5)
-		rateLimitDuration := int64(30)
-
-		if !util.IsStringEmpty(endpoint.HttpTimeout) {
-			v := endpoint.HttpTimeout
-			if !strings.Contains(endpoint.HttpTimeout, "s") {
-				v += "s"
-			}
-
-			d, err := time.ParseDuration(v)
-			if err != nil {
-				return fmt.Errorf("failed to parse endpoint HttpTimeout: %v", err)
-			}
-			httpTimeout = int64(d.Seconds())
-		}
-
-		if !util.IsStringEmpty(endpoint.RateLimitDuration) {
-			d, err := time.ParseDuration(endpoint.RateLimitDuration)
-			if err != nil {
-				return fmt.Errorf("failed to parse endpoint HttpTimeout: %v", err)
-			}
-
-			rateLimitDuration = int64(d.Seconds())
-		}
-
 		values = append(values, map[string]interface{}{
 			"id":                  endpoint.UID,
-			"name":                endpoint.Title,
+			"name":                endpoint.Name,
 			"status":              endpoint.Status,
 			"secrets":             endpoint.Secrets,
 			"owner_id":            endpoint.OwnerID,
-			"url":                 endpoint.TargetURL,
+			"url":                 endpoint.Url,
 			"description":         endpoint.Description,
-			"http_timeout":        httpTimeout,
-			"rate_limit":          endpoint.RateLimit,
-			"rate_limit_duration": rateLimitDuration,
-			"advanced_signatures": endpoint.AdvancedSignatures,
+			"http_timeout":        10,
+			"rate_limit":          0,
+			"rate_limit_duration": 0,
+			"advanced_signatures": true,
 			"slack_webhook_url":   endpoint.SlackWebhookURL,
 			"support_email":       endpoint.SupportEmail,
 			"app_id":              endpoint.AppID,
@@ -114,8 +86,3 @@ func (m *Migrator) SaveEndpoints(ctx context.Context, endpoints []datastore.Endp
 	_, err := m.newDB.NamedExecContext(ctx, saveEndpoints, values)
 	return err
 }
-
-const c = `
-./nc run --old-base-url="https://dashboard.getconvoy.io" --pat="CO.5IdjnVLBm1BGtk1T.31vBixXVD4PzJGYgiRKqkhSIgrCF3OeSZHx2VyXsm7h4ZGwSktih77KK8cjKyI6E" --old-pg-dsn="postgresql://reader-writer:readWrite@convoy-prod-db.cqovqpuj1mkv.us-east-1.rds.amazonaws.com/convoy" --new-pg-dsn="postgres://dedicateddbadmin:qKQ71exN5irh0w5FrPrsflc97lDFmHm9@prod-dedicated-db-proxy-01.proxy-c0el2iadta4e.eu-west-1.rds.amazonaws.com:5432/dbkxbau9zvh3kh?sslmode=require&connect_timeout=30" --migrate-events
-
-`
